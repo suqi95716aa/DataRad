@@ -4,5 +4,7 @@ embeddings = HuggingFaceHubEmbeddings(model="http://localhost:8080")
 
 text = "What is deep learning?"
 
+text1 = "aaa"
+
 
 
