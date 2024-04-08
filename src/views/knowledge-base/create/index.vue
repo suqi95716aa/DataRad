@@ -2,7 +2,7 @@
 	<div class="create">
 		<div class="create-wrapper">
 			<div class="create-content">
-				<div class="c-title mb-20">知识库新建</div>
+				<div class="c-title mb-20">{{ title }}</div>
 				<div class="c-form">
 					<n-form
 						ref="formRef"
@@ -105,7 +105,8 @@ export default defineComponent({
 		const tabStore = useTabStore();
 		const route = useRoute();
 		const id = route.query.id;
-		const formRef = ref<FormInst | null>(null)
+		const title = ref('');
+		const formRef = ref<FormInst | null>(null);
 		const formData = ref({
 			name: null,
 			desc: null,
@@ -117,8 +118,10 @@ export default defineComponent({
 
 		if (id) {
 			tabStore.setActiveTabTitle('知识库编辑');
+			title.value = '知识库编辑';
 		} else {
 			tabStore.setActiveTabTitle('知识库新建');
+			title.value = '知识库新建';
 		}
 
 
@@ -152,6 +155,7 @@ export default defineComponent({
           message: '请选择检索方式'
         }
 			},
+			title,
 			tempOptions
 		}
 	}
@@ -177,7 +181,7 @@ export default defineComponent({
 	.c-title {
 		height: 48px;
 		line-height: 48px;
-		font-size: 16px;
+		font-size: 18px;
 		font-weight: 500;
 	}
 	.c-form {
