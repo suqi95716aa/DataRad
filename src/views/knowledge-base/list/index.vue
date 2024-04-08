@@ -334,13 +334,13 @@ export default defineComponent({
 								}
 							}
 							.info-right {
-								::v-deep .i-title {
+								:deep(.i-title) {
 									font-size: 16px;
 									font-weight: 500;
 								}
 							}
 						}
-						::v-deep .desc {
+						:deep(.desc) {
 							font-size: 14px;
 							font-weight: 400;
 							color: rgb(118, 124, 130);
@@ -372,7 +372,7 @@ export default defineComponent({
 								}
 								.c-icon {
 									&:hover {
-										::v-deep path {
+										:deep(path) {
 											fill: #1890ff;
 										}
 									}
