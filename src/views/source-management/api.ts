@@ -41,3 +41,8 @@ export async function UpdateObj(obj: updateQuery) {
   const res = await request.post(`/config/update`, obj);
   return res;
 }
+
+export async function DownloadObj(obj: updateQuery) {
+  const res = await request.post(`/config/download`, obj, { responseType: 'blob' });
+  return res;
+}

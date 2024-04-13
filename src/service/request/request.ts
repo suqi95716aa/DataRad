@@ -41,6 +41,8 @@ export function createRequest(axiosConfig: AxiosRequestConfig, backendConfig?: S
       config: param.axiosConfig
     })) as Service.RequestResult<T>;
 
+		console.log('asyncRequest-----res', res)
+
     return res;
   }
 
@@ -122,6 +124,7 @@ export function createHookRequest(axiosConfig: AxiosRequestConfig, backendConfig
 
     function handleRequestResult(response: any) {
       const res = response as Service.RequestResult<T>;
+			console.log('res----ggg', res)
       data.value = res.data;
       error.value = res.error;
       endLoading();

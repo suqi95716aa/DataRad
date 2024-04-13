@@ -421,8 +421,12 @@ export default defineComponent({
 			showModal.value = true;
 		};
 
-		const downloadClick = (row: RowData) => {
-			message.info("开发中");
+		const downloadClick = async (row: RowData) => {
+			const formData = new FormData();
+			formData.append("Uid", auth.userInfo.userId);
+			formData.append("ConfigId", row.ConfigId);
+			const resData = await api.DownloadObj(formData);
+			console.log("data----DownloadObj", resData);
 		}
 
 		const handleAdd = async (formData: any) => {

@@ -71,6 +71,9 @@
 				</div>
 			</div>
 		</div>
+
+		<!-- 弹框 -->
+		<CreateDialog ref="createRef" />
 	</div>
 </template>
 
@@ -78,7 +81,6 @@
 import {
 	ref,
 	defineComponent,
-	watch,
 } from "vue";
 import {
 	TrashOutline as TrashIcon,
@@ -89,9 +91,9 @@ import {
 	DownloadOutline as DownloadIcon
 } from "@vicons/ionicons5";
 import { NButton, useMessage, useDialog } from "naive-ui";
-import { useAuthStore } from "@/store";
 import { routeName } from '@/router';
 import { useRouterPush } from '@/composables';
+import CreateDialog from './components/create-dialog.vue';
 
 
 type RowData = {
@@ -105,7 +107,8 @@ export default defineComponent({
 		AddIcon,
 		CreateIcon,
 		EyeIcon,
-		DownloadIcon
+		DownloadIcon,
+		CreateDialog
 	},
 	setup() {
 		const search = ref("");
@@ -116,6 +119,7 @@ export default defineComponent({
 		const pageSize = ref(30);
 		const loading = ref(false);
 		const loaded = ref(false);
+		const createRef = ref();
 
 		const message = useMessage();
 		const dialog = useDialog();
@@ -150,7 +154,8 @@ export default defineComponent({
 
 		// 跳转创建知识库页面
 		const addClick = () => {
-			routerPush({ name: routeName('knowledge-base_create'), query: {} });
+			createRef.value.onShow()
+			// routerPush({ name: routeName('knowledge-base_create'), query: {} });
 		};
 
 		const getInfoClick = (row: any) => {
@@ -200,6 +205,7 @@ export default defineComponent({
 			total,
 			loading,
 			loaded,
+			createRef,
 			changePage,
 			searchChange,
 			queryClick,
