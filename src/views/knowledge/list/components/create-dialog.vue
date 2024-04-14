@@ -114,7 +114,7 @@ export default defineComponent({
 		const showModal = ref(false);
 		const title = ref('新建知识库');
 		const formRef = ref<FormInst | null>(null);
-		const activeColor = ref('#2454ff')
+		const activeColor = ref('#1890ff')
 		const activeIconKey = ref('help');
 		const model = ref<ModelType>({
       name: null,
