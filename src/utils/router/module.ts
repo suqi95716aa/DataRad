@@ -22,7 +22,7 @@ export function handleModuleRoutes(modules: AuthRoute.RouteModule) {
     const item = modules[key].default;
     if (item) {
 			// routes.push(item);
-			if (['about', 'source-management', 'dashboard', 'ybp-list', 'knowledge-base' ,'knowledge-base_list', 'knowledge-base_details'].includes(item?.name)) {
+			if (['about', 'source-management', 'dashboard', 'ybp-list', 'knowledge' ,'knowledge_list', 'knowledge_details'].includes(item?.name)) {
 				routes.push(item);
 			}
     } else {

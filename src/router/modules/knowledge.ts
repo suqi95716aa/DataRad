@@ -1,8 +1,8 @@
 const component: any = {
-	name: 'knowledge-base',
-	path: '/knowledge-base',
+	name: 'knowledge',
+	path: '/knowledge',
 	component: 'basic',
-	redirect: '/knowledge-base/list',
+	redirect: '/knowledge/list',
 	meta: {
 		title: '知识库',
 		requiresAuth: true,
@@ -11,38 +11,38 @@ const component: any = {
 	},
 	children: [
 		{
-      name: 'knowledge-base_list',
-      path: '/knowledge-base/list',
+      name: 'knowledge_list',
+      path: '/knowledge/list',
       component: 'self',
       meta: {
         title: '知识库',
         requiresAuth: true,
         icon: 'carbon:ibm-watson-knowledge-studio',
-				activeMenu: 'knowledge-base',
+				activeMenu: 'knowledge',
 				hide: true
       }
     },
 		{
-      name: 'knowledge-base_create',
-      path: '/knowledge-base/create',
+      name: 'knowledge_create',
+      path: '/knowledge/create',
       component: 'self',
       meta: {
         title: '知识库',
         requiresAuth: true,
         icon: 'carbon:ibm-watson-knowledge-studio',
-				activeMenu: 'knowledge-base',
+				activeMenu: 'knowledge',
 				hide: true
       }
     },
 		{
-      name: 'knowledge-base_details',
-      path: '/knowledge-base/details',
+      name: 'knowledge_details',
+      path: '/knowledge/details',
       component: 'self',
       meta: {
         title: '知识库',
         requiresAuth: true,
         icon: 'carbon:ibm-watson-knowledge-studio',
-				activeMenu: 'knowledge-base',
+				activeMenu: 'knowledge',
 				hide: true
       }
     },

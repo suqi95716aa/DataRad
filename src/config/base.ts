@@ -44,7 +44,7 @@ export const kbIconList = [
 	}
 ]
 
-export const kbColorList = ['#2454ff', '#ff0074', '#ffa629', '#9747ff', '#48d1e0'];
+export const kbColorList = ['#1890ff', '#ff0074', '#ffa629', '#9747ff', '#48d1e0'];
 
 export const getKbIcon = (type: string) => {
 	const emptyObj: iconType = {

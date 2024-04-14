@@ -27,7 +27,9 @@
 							<div class="list-item_top">
 								<div class="info">
 									<div class="info-left">
-										<img src="@/assets/images/zsk.png" alt="" />
+										<div class="kb-icon-box" :style="{ backgroundColor: '#1890ff' }">
+											<img :src="getKbIcon('help')" />
+										</div>
 									</div>
 									<div class="info-right">
 										<n-ellipsis class="i-title" style="max-width: 200px">
@@ -38,23 +40,41 @@
 								<n-ellipsis class="desc" :line-clamp="1" style="max-width: 260px">
 									{{ item.desc }}
 								</n-ellipsis>
+								<p class="font-num">
+									<span>{{ item.fontNum }} 字</span>
+								</p>
 							</div>
 							<div class="list-item_bom">
 								<div class="btn-group">
 									<div class="btn-item">
-										<n-icon size="20" @click="getInfoClick(item)">
-											<EyeIcon />
-										</n-icon>
+										<n-popover trigger="hover">
+											<template #trigger>
+												<n-icon size="20" @click="previewClick(item)">
+													<EyeIcon />
+												</n-icon>
+											</template>
+											<span>查看详情</span>
+										</n-popover>
 									</div>
 									<div class="btn-item">
-										<n-icon size="20" @click="editClick(item)">
-											<CreateIcon />
-										</n-icon>
+										<n-popover trigger="hover">
+											<template #trigger>
+												<n-icon size="20" @click="editClick(item)">
+													<CreateIcon />
+												</n-icon>
+											</template>
+											<span>编辑</span>
+										</n-popover>
 									</div>
 									<div class="btn-item">
-										<n-icon size="20" @click="delClick(item)">
-											<TrashIcon />
-										</n-icon>
+										<n-popover trigger="hover">
+											<template #trigger>
+												<n-icon size="20" @click="delClick(item)">
+													<TrashIcon />
+												</n-icon>
+											</template>
+											<span>删除</span>
+										</n-popover>
 									</div>
 								</div>
 							</div>
@@ -94,6 +114,7 @@ import { NButton, useMessage, useDialog } from "naive-ui";
 import { routeName } from '@/router';
 import { useRouterPush } from '@/composables';
 import CreateDialog from './components/create-dialog.vue';
+import { getKbIcon } from '@/config';
 
 
 type RowData = {
@@ -130,12 +151,14 @@ export default defineComponent({
 				{
 					id: '001',
 					name: '知识库001',
-					desc: 'haha'
+					desc: 'haha',
+					fontNum: 300
 				},
 				{
 					id: '002',
 					name: '知识库002',
-					desc: 'haha111'
+					desc: 'haha111',
+					fontNum: 350
 				}
 			];
 			loading.value = true;
@@ -154,16 +177,19 @@ export default defineComponent({
 
 		// 跳转创建知识库页面
 		const addClick = () => {
+			createRef.value.setTitle('新建知识库')
 			createRef.value.onShow()
-			// routerPush({ name: routeName('knowledge-base_create'), query: {} });
+			// routerPush({ name: routeName('knowledge_create'), query: {} });
 		};
 
-		const getInfoClick = (row: any) => {
-			routerPush({ name: routeName('knowledge-base_details'), query: { id: row.id } });
+		const previewClick = (row: any) => {
+			routerPush({ name: routeName('knowledge_details'), query: { id: row.id } });
 		};
 
 		const editClick = (row: any) => {
-			routerPush({ name: routeName('knowledge-base_create'), query: {id: row.id} });
+			createRef.value.onShow()
+			createRef.value.setTitle('编辑知识库')
+			// routerPush({ name: routeName('knowledge_create'), query: {id: row.id} });
 		};
 
 		const delClick = (row: any) => {
@@ -206,10 +232,11 @@ export default defineComponent({
 			loading,
 			loaded,
 			createRef,
+			getKbIcon,
 			changePage,
 			searchChange,
 			queryClick,
-			getInfoClick,
+			previewClick,
 			addClick,
 			delClick,
 			editClick,
@@ -323,20 +350,30 @@ export default defineComponent({
 						padding: 12px 16px;
 						box-sizing: border-box;
 						overflow: hidden;
+						padding-bottom: 4px;
 						.info {
 							display: flex;
 							margin-bottom: 8px;
 							.info-left {
-								flex: 0 0 32px;
+								flex: 0 0 36px;
 								display: flex;
 								align-items: center;
 								justify-content: center;
 								width: 32px;
 								height: 32px;
 								margin-right: 16px;
-								img {
-									max-width: 100%;
-									max-height: 100%;
+								.kb-icon-box {
+									width: 36px;
+									height: 36px;
+									border-radius: 6px;
+									background-color: #d1d3d6;
+									display: flex;
+									align-items: center;
+									justify-content: center;
+									border-radius: 8px;
+									img {
+										width: 24px;
+									}
 								}
 							}
 							.info-right {
@@ -347,6 +384,12 @@ export default defineComponent({
 							}
 						}
 						:deep(.desc) {
+							flex: 1;
+							font-size: 14px;
+							font-weight: 400;
+							color: rgb(118, 124, 130);
+						}
+						.font-num {
 							font-size: 14px;
 							font-weight: 400;
 							color: rgb(118, 124, 130);
