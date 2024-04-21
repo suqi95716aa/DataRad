@@ -232,10 +232,12 @@ export default defineComponent({
 		}
 
 		const addClick = () => {
-
+			configRef.value.onShow()
 		}
 
-		const previewClick = (item: ItemType) => {}
+		const previewClick = (item: ItemType) => {
+
+		}
 		const editClick = (item: ItemType) => {
 			configRef.value.onShow()
 		}

@@ -180,6 +180,7 @@ import type { DataTableColumns } from "naive-ui";
 import { useAuthStore } from "@/store";
 import * as api from "./api";
 import { LookDialog } from './components';
+import { downloadBlobFile } from '@/utils';
 
 type RowData = {
 	[key: string]: any;
@@ -425,13 +426,20 @@ export default defineComponent({
 			const formData = new FormData();
 			formData.append("Uid", auth.userInfo.userId);
 			formData.append("ConfigId", row.ConfigId);
-			const resData = await api.DownloadObj(formData);
-			console.log("data----DownloadObj", resData);
+			if (row.downloading) return false;
+			row.downloading = true;
+
+			try {
+				const resData = await api.DownloadObj(formData);
+				downloadBlobFile(resData.data, row.SourceName);
+			} catch (error) {
+				message.warning("下载失败");
+			}
+			row.downloading = false;
 		}
 
 		const handleAdd = async (formData: any) => {
 			const { data } = await api.AddObj(formData);
-			console.log("data----handleAdd", data);
 			if (data) {
 				message.success("添加成功");
 				auth.addWdConfigInfo(data);
