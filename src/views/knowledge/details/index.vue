@@ -9,19 +9,46 @@
 				</div>
 				<div class="nav-info">
 					<div class="nav-info-left">
-						<div class="icon-box" :style="{ backgroundColor: '#1890ff' }">
-							<img :src="getKbIcon('help')" />
+						<div
+							class="icon-box"
+							:style="{ backgroundColor: kbase?.KBColor || '#1890ff' }"
+						>
+							<img :src="getKbIcon(kbase?.KBBGImg || 'help')" />
 						</div>
 					</div>
 					<div class="nav-info-right">
-						<h5>hello</h5>
-						<p>haha</p>
+						<h5 class="nav-title">
+							<n-ellipsis style="max-width: 200px;">
+								{{ kbase?.KBName }}
+								<template #tooltip>
+									<div style="text-align: center; max-width: 200px;">
+										{{ kbase?.KBName }}
+									</div>
+								</template>
+							</n-ellipsis>
+						</h5>
+						<p class="nav-sub-title">
+							<n-ellipsis style="max-width: 200px; ">
+								{{ kbase?.KBDesc }}
+								<template #tooltip>
+									<div style="text-align: center; max-width: 200px;">
+										{{ kbase?.KBDesc }}
+									</div>
+								</template>
+							</n-ellipsis>
+						</p>
 					</div>
 				</div>
 			</div>
 			<n-divider />
 			<div class="knowledge-action">
-				<n-button type="info" size="small" style="height: 34px;" color="#1890ff" @click="addClick">
+				<n-button
+					type="info"
+					size="small"
+					style="height: 34px"
+					color="#1890ff"
+					@click="addClick"
+				>
 					<template #icon>
 						<n-icon>
 							<AddIcon />
@@ -29,7 +56,14 @@
 					</template>
 					上传知识
 				</n-button>
-				<n-input style="width: 300px;margin-left: 20px;" type="text" v-model:value="searchVal" round placeholder="请输入知识名称" :on-input="searchValChange">
+				<n-input
+					style="width: 300px; margin-left: 20px"
+					type="text"
+					v-model:value="searchVal"
+					round
+					placeholder="请输入知识名称"
+					:on-input="searchValChange"
+				>
 					<template #prefix>
 						<n-icon :component="SearchOutlineIcon" />
 					</template>
@@ -49,18 +83,24 @@
 								</div>
 								<div class="info-right">
 									<n-ellipsis class="i-title" style="max-width: 200px">
-										{{ item.name }}
+										{{ item.KName }}
 									</n-ellipsis>
 								</div>
 							</div>
 							<div class="update-time">
-								<span>{{ item.fontNum }} 字</span><n-divider vertical /><span>更新时间：{{ item.updateTime }}</span>
+								<span>{{ 0 }} 字</span><n-divider vertical /><span
+									>更新时间：{{ item.KUpdateTime }}</span
+								>
 							</div>
 							<div class="kb-id">
-								<span>文档id：{{ item.id }}</span>
+								<span>文档id：{{ item.KID }}</span>
 								<n-popover trigger="hover">
 									<template #trigger>
-										<n-icon class="copy-icon" size="14">
+										<n-icon
+											class="copy-icon"
+											size="14"
+											@click="copyClick(item.KID)"
+										>
 											<CopyIcon />
 										</n-icon>
 									</template>
@@ -69,60 +109,67 @@
 							</div>
 						</div>
 						<div class="list-item_bom">
-								<div class="btn-group">
-									<div class="btn-item">
-										<n-popover trigger="hover">
-											<template #trigger>
-												<n-icon size="20" @click="previewClick(item)">
-													<EyeIcon />
-												</n-icon>
-											</template>
-											<span>预览</span>
-										</n-popover>
-									</div>
-									<div class="btn-item">
-										<n-popover trigger="hover">
-											<template #trigger>
-												<n-icon size="20" @click="editClick(item)">
-													<CreateIcon />
-												</n-icon>
-											</template>
-											<span>配置</span>
-										</n-popover>
-									</div>
-									<div class="btn-item">
-										<n-popover trigger="hover">
-											<template #trigger>
-												<n-icon size="20" @click="downloadClick(item)">
-													<DownloadIcon />
-												</n-icon>
-											</template>
-											<span>下载</span>
-										</n-popover>
-									</div>
-									<div class="btn-item">
-										<n-popover trigger="hover">
-											<template #trigger>
-												<n-icon size="20" @click="delClick(item)">
-													<TrashIcon />
-												</n-icon>
-											</template>
-											<span>删除</span>
-										</n-popover>
-									</div>
+							<div class="btn-group">
+								<div class="btn-item">
+									<n-popover trigger="hover">
+										<template #trigger>
+											<n-icon size="20" @click="previewClick(item)">
+												<EyeIcon />
+											</n-icon>
+										</template>
+										<span>预览</span>
+									</n-popover>
+								</div>
+								<div class="btn-item">
+									<n-popover trigger="hover">
+										<template #trigger>
+											<n-icon size="20" @click="editClick(item)">
+												<CreateIcon />
+											</n-icon>
+										</template>
+										<span>配置</span>
+									</n-popover>
+								</div>
+								<div class="btn-item">
+									<n-popover trigger="hover">
+										<template #trigger>
+											<n-icon size="20" @click="downloadClick(item)">
+												<DownloadIcon />
+											</n-icon>
+										</template>
+										<span>下载</span>
+									</n-popover>
+								</div>
+								<div class="btn-item">
+									<n-popover trigger="hover">
+										<template #trigger>
+											<n-icon size="20" @click="delClick(item)">
+												<TrashIcon />
+											</n-icon>
+										</template>
+										<span>删除</span>
+									</n-popover>
 								</div>
 							</div>
+						</div>
 					</div>
 				</div>
-				<n-empty v-if="!loading && loaded && pageList.length === 0" style="margin-top: 30px;" description="暂无数据" />
+				<n-empty
+					v-if="!loading && loaded && pageList.length === 0"
+					style="margin-top: 30px"
+					description="暂无数据"
+				/>
 			</div>
 			<div class="knowledge-footer">
-					<n-pagination :item-count="total" :page-size="pageSize" :page="currentPage" :on-update:page="changePage">
-						<template #prefix="{ itemCount }">
-							共 {{ itemCount }} 条
-						</template>
-					</n-pagination>
-				</div>
+				<n-pagination
+					:item-count="total"
+					:page-size="pageSize"
+					:page="currentPage"
+					:on-update:page="changePage"
+				>
+					<template #prefix="{ itemCount }"> 共 {{ itemCount }} 条 </template>
+				</n-pagination>
+			</div>
 		</div>
 
 		<!-- 弹框 -->
@@ -139,18 +186,21 @@ import {
 	TrashOutline as TrashIcon,
 	CreateOutline as CreateIcon,
 	EyeOutline as EyeIcon,
-	DownloadOutline as DownloadIcon
+	DownloadOutline as DownloadIcon,
 } from "@vicons/ionicons5";
-import ConfigDialog from './components/config-dialog.vue';
-import { ref, defineComponent } from 'vue';
-import { routeName } from '@/router';
-import { useRouterPush } from '@/composables';
+import { useMessage } from "naive-ui";
+import ConfigDialog from "./components/config-dialog.vue";
+import { ref, watch, defineComponent } from "vue";
+import { routeName } from "@/router";
+import { useRoute } from "vue-router";
+import { useRouterPush } from "@/composables";
 import { useTabStore } from "@/store";
-import { getKbIcon } from '@/config';
+import { getKbIcon } from "@/config";
+import { useKnowledgeStore } from "@/store";
 
 type ItemType = {
 	[key: string]: any;
-}
+};
 
 export default defineComponent({
 	components: {
@@ -161,12 +211,12 @@ export default defineComponent({
 		TrashIcon,
 		CreateIcon,
 		EyeIcon,
-		DownloadIcon
+		DownloadIcon,
 	},
-	setup () {
+	setup() {
 		const tabStore = useTabStore();
-		tabStore.setActiveTabTitle('知识库详情');
-		const searchVal = ref('');
+		tabStore.setActiveTabTitle("知识库详情");
+		const searchVal = ref("");
 		const loading = ref(false);
 		const loaded = ref(false);
 		const pageList = ref<ItemType[]>([]);
@@ -174,75 +224,107 @@ export default defineComponent({
 		const total = ref(0);
 		const pageSize = ref(30);
 		const configRef = ref();
+		const KBID = ref("");
+		const kbase = ref<Knowledge.Base>();
 
 		const { routerPush } = useRouterPush();
+		const { knowledgeBaseList, addK } = useKnowledgeStore();
+		const route = useRoute();
+		KBID.value = route.query.id + "";
 
+		kbase.value = knowledgeBaseList.find(
+			(item: Knowledge.Base) => item.KBID === KBID.value
+		);
+
+		console.log("kbase-----", kbase.value);
+
+		// hooks
+		const message = useMessage();
+
+		watch(
+			() => kbase.value?.data,
+			(newVal) => {
+				console.log("newVal----", newVal);
+				getPageList();
+			},
+			{
+				deep: true,
+			}
+		);
 
 		// methods
 		const getPageList = () => {
-			let list = [
-				{
-					id: '001',
-					name: '知识001',
-					desc: 'haha',
-					updateTime: '2024-02-02 12:12:00',
-					fontNum: 300
-				},
-				{
-					id: '002',
-					name: '知识002',
-					desc: 'haha111',
-					updateTime: '2024-02-02 12:12:00',
-					fontNum: 300
-				}
-			];
+			let list = kbase.value?.data || [];
 			loading.value = true;
 			if (searchVal.value) {
 				list = list.filter((item: any) => {
-					const name: string = item.name || "";
+					const name: string = item.KName || "";
 					return name.includes(searchVal.value);
 				});
 			}
-			pageList.value = list.slice((currentPage.value - 1) * pageSize.value, currentPage.value * pageSize.value) as [];
+			pageList.value = list.slice(
+				(currentPage.value - 1) * pageSize.value,
+				currentPage.value * pageSize.value
+			) as [];
 			total.value = list.length;
 			loading.value = false;
 			loaded.value = true;
 		};
-		getPageList()
+		getPageList();
 
 		const backClick = () => {
-			routerPush({ name: routeName('knowledge_list') });
-		}
+			routerPush({ name: routeName("knowledge_list") });
+		};
 
-		let timer: any = null
+		let timer: any = null;
 		const searchValChange = (value: any) => {
 			if (timer) {
-				clearTimeout(timer)
+				clearTimeout(timer);
 			}
 
 			timer = setTimeout(() => {
 				currentPage.value = 1;
 				getPageList();
-			}, 1000)
-		}
+			}, 1000);
+		};
 
 		const changePage = (page: number) => {
 			currentPage.value = page;
 			getPageList();
-		}
+		};
 
-		const addClick = () => {
+		const addClick = async () => {
 			configRef.value.onShow()
-		}
+			// const params = {
+			// 	KBID: KBID.value,
+			// 	FileName: "新建文本文档.txt",
+			// 	Type: "1",
+			// 	KConfig: {
+			// 		"chunk_size": 2000,
+			// 		"chunk_overlap": 100
+			// 	}
+			// };
+			// const results = await addK(params);
 
-		const previewClick = (item: ItemType) => {
+			// if (results) {
 
-		}
+			// }
+		};
+
+		const previewClick = (item: ItemType) => {};
+
 		const editClick = (item: ItemType) => {
-			configRef.value.onShow()
-		}
-		const downloadClick = (item: ItemType) => {}
-		const delClick = (item: ItemType) => {}
+			configRef.value.onShow();
+		};
+
+		const downloadClick = (item: ItemType) => {};
+
+		const delClick = (item: ItemType) => {};
+
+		const copyClick = (val: string) => {
+			navigator.clipboard.writeText(val);
+			message.success("已复制");
+		};
 
 		return {
 			configRef,
@@ -253,6 +335,7 @@ export default defineComponent({
 			currentPage,
 			pageSize,
 			pageList,
+			kbase,
 			SearchOutlineIcon,
 			getKbIcon,
 			backClick,
@@ -262,10 +345,11 @@ export default defineComponent({
 			previewClick,
 			editClick,
 			downloadClick,
-			delClick
-		}
-	}
-})
+			delClick,
+			copyClick,
+		};
+	},
+});
 </script>
 
 <style lang="scss" scoped>
@@ -310,11 +394,21 @@ export default defineComponent({
 			}
 		}
 		.nav-info-right {
-
-			h5 {
+			.nav-title {
 				font-weight: 600;
-				font-size: 14px;
+				font-size: 16px;
 				line-height: 22px;
+				overflow: hidden;
+				white-space: nowrap;
+				text-overflow: ellipsis;
+				max-width: 200px;
+			}
+			.nav-sub-title {
+				overflow: hidden;
+				white-space: nowrap;
+				text-overflow: ellipsis;
+				max-width: 200px;
+				color: #5e5e66;
 			}
 		}
 	}
@@ -426,7 +520,6 @@ export default defineComponent({
 							&:hover {
 								color: #1890ff;
 							}
-
 						}
 						.c-icon {
 							&:hover {

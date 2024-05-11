@@ -4,20 +4,23 @@
 		style="width: 800px; position: fixed; top: 20vh"
 		:title="title"
 		:show-icon="false"
+		:loading="loading"
 		preset="dialog"
 		positive-text="保存"
     negative-text="取消"
+		:on-after-leave="onAfterLeaveDialog"
+		:on-positive-click="onPositiveClick"
 	>
 		<div class="dialog-content mt-20">
 			<n-form ref="formRef" :model="model" :rules="rules">
 				<n-form-item path="name" label="知识库名称">
-					<n-input v-model:value="model.name" placeholder="请输入" @keydown.enter.prevent />
+					<n-input v-model:value="model.name" :maxlength="20" placeholder="请输入" @keydown.enter.prevent />
 				</n-form-item>
 				<n-form-item path="desc" label="知识库描述">
 					<n-input
 						v-model:value="model.desc"
 						type="textarea"
-						maxlength="200"
+						:maxlength="200"
 						show-count
 						clearable
 						:autosize="{
@@ -28,13 +31,35 @@
 						@keydown.enter.prevent
 					/>
 				</n-form-item>
-				<n-form-item path="vectorModel" label="向量化模型">
-					<n-select
-						v-model:value="model.vectorModel"
-						placeholder="请选择"
-						:options="mxOptions"
-						@keydown.enter.prevent
-					/>
+				<n-form-item ref="formItemRef" path="tags" :label="`知识库标签（最多${tagsMax}个）`">
+					<n-space vertical>
+						<n-dynamic-tags v-model:value="model.tags" :max="tagsMax" :input-props="{ maxlength: 8 }" type="info" :on-update:value="dynamicTagsUpdate">
+							<template #trigger="{ activate, disabled }">
+								<n-button
+									size="small"
+									type="primary"
+									dashed
+									:disabled="disabled"
+									@click="activate()"
+								>
+									<template #icon>
+										<n-icon>
+											<AddIcon />
+										</n-icon>
+									</template>
+									添加
+								</n-button>
+							</template>
+						</n-dynamic-tags>
+						<n-space style="gap: 8px 0;">
+							<span style="line-height: 28px;">可选标签：</span>
+							<n-space>
+								<n-tag v-for="tag in tagsList" :key="tag.id" v-model:checked="tag.checked" :type="tag.checked ? 'success' : 'default'" :disabled="tag.disabled" checkable @click="tagClick(tag)">
+									{{ tag.name }}
+								</n-tag>
+							</n-space>
+						</n-space>
+					</n-space>
 				</n-form-item>
 				<n-form-item path="kbIcon" label="知识库图标">
 					<div class="kb-content">
@@ -81,7 +106,10 @@
 </template>
 
 <script lang="ts">
-import { ref, defineComponent } from 'vue';
+import {
+	Add as AddIcon
+} from "@vicons/ionicons5";
+import { ref, watch, nextTick, defineComponent } from 'vue';
 import {
   FormInst,
   FormItemInst,
@@ -90,12 +118,15 @@ import {
   FormRules
 } from 'naive-ui';
 import { getKbIcon, kbIconList, kbColorList } from '@/config';
+import { isArray } from "lodash-es";
+import { useKnowledgeStore } from '@/store';
+
 
 interface ModelType {
   name: string | null
 	desc: string | null
-	vectorModel: string | null
-	kbIcon: string | null
+	kbIcon: string | null,
+	tags: string[]
 }
 
 const mxOptions: any = [
@@ -109,23 +140,109 @@ const mxOptions: any = [
 	}
 ]
 
+const tagsOpts = [
+	{
+		id: 1,
+		name: '金融',
+		checked: false,
+		disabled: false
+	},
+	{
+		id: 2,
+		name: '财务',
+		checked: false,
+		disabled: false
+	},
+	{
+		id: 3,
+		name: '科技',
+		checked: false,
+		disabled: false
+	},
+	{
+		id: 4,
+		name: '汽车',
+		checked: false,
+		disabled: false
+	}
+]
+
 export default defineComponent({
-	setup () {
+	components: {
+		AddIcon
+	},
+	emits: ['change'],
+	setup (props, ctx) {
 		const showModal = ref(false);
 		const title = ref('新建知识库');
 		const formRef = ref<FormInst | null>(null);
-		const activeColor = ref('#1890ff')
+		const formItemRef = ref<FormItemInst | null>(null);
+		const activeColor = ref('#1890ff');
 		const activeIconKey = ref('help');
+		const loading = ref(false);
+		const tagsMax = 2;
+		const KBID = ref('');
+		const kbDetails = ref<Knowledge.Base>();
 		const model = ref<ModelType>({
       name: null,
 			desc: null,
-			vectorModel: null,
-			kbIcon: activeIconKey.value
+			kbIcon: activeIconKey.value,
+			tags: []
     })
+		const tagsList = ref(tagsOpts);
+
+
+		// hooks
+		const message = useMessage()
+		const { addKB, updateKB } = useKnowledgeStore()
+
+
+		// watch
+		watch(() => model.value.tags, (newTags) => {
+			if (newTags.length >= tagsMax) {
+				tagsList.value = tagsList.value.map((item) => {
+					item.disabled = true
+					return item
+				})
+			} else {
+				tagsList.value = tagsList.value.map((item) => {
+					item.disabled = false
+					return item
+				})
+			}
+
+			tagsList.value.forEach(item => {
+				const fIndex = newTags.findIndex(tag => tag === item.name)
+				if (fIndex === -1) {
+					item.checked = false
+				} else {
+					item.checked = true
+				}
+				if (newTags.length >= tagsMax) {
+					if (fIndex !== -1) {
+						item.disabled = false
+					} else {
+						item.disabled = true
+					}
+				}
+			})
+		})
 
 		// methods
 		const onShow = (data: any) => {
 			showModal.value = true;
+			KBID.value = '';
+			kbDetails.value = {} as Knowledge.Base;
+			if (data) {
+				let tags = handleTags(data.KBLabel);
+				KBID.value = data.KBID;
+				model.value.name = data.KBName;
+				model.value.desc = data.KBDesc;
+				activeColor.value = data.KBColor;
+				activeIconKey.value = data.KBBGImg;
+				model.value.tags = tags;
+				kbDetails.value = data;
+			}
 		};
 
 		const onHide = () => {
@@ -169,12 +286,12 @@ export default defineComponent({
           trigger: ['input', 'blur']
         }
       ],
-			vectorModel: [
+			tags: [
         {
           required: true,
           validator (rule: FormItemRule, value: string) {
-            if (!value) {
-              return new Error('请选择向量化模型')
+            if (isArray(value) && value.length === 0) {
+              return new Error('请添加标签')
             }
             return true
           },
@@ -195,23 +312,108 @@ export default defineComponent({
       ],
     }
 
+		// methods
+		const handleTags = (val: string) => {
+			let res = []
+			try {
+				res = JSON.parse(val)
+			} catch (error) {}
+			return res
+		}
+
+		const tagClick = (tag: any) => {
+			const tags = model.value.tags
+			const fIndex = tags.findIndex((t: any) => t === tag.name)
+			const list = tags.map(i => i) || []
+
+			if (tag.disabled) return
+
+			if (tag.checked && fIndex === -1) {
+				if (list.length >= 3) return
+				list.push(tag.name)
+				model.value.tags = list
+			} else {
+				list.splice(fIndex, 1)
+				model.value.tags = list
+			}
+			formItemRef.value?.validate()
+		}
+
+		const dynamicTagsUpdate = (value: string[]) => {
+			model.value.tags = Array.from(new Set(value))
+		}
+
+		const onAfterLeaveDialog = () => {
+			model.value.name = null;
+			model.value.desc = null;
+			model.value.tags = [];
+			activeColor.value = '#1890ff';
+			activeIconKey.value = 'help';
+			tagsList.value = tagsOpts;
+		}
+
+		const onPositiveClick = () => {
+			if (loading.value) return false;
+			loading.value = true
+			return new Promise((resolve, reject) => {
+				formRef.value?.validate(async (errors) => {
+					if (!errors) {
+						let results
+						const params = {
+							KBID: '',
+							KBName: model.value.name,
+							KBDesc: model.value.desc,
+							KBLabel: JSON.stringify(model.value.tags),
+							KBColor: activeColor.value,
+							KBBGImg: activeIconKey.value,
+							data: [] as Knowledge.K[]
+						}
+						if (KBID.value) {
+							params.KBID = KBID.value
+							params.data = kbDetails.value?.data || []
+							results = await updateKB(params)
+						} else {
+							results = await addKB(params)
+						}
+						loading.value = false
+						if (results) {
+							resolve(true);
+							message.success(KBID.value ? '更新成功' : '添加成功');
+							ctx.emit('change', true)
+							return false;
+						}
+					}
+					loading.value = false
+					resolve(false)
+				})
+			})
+		}
+
 		return {
 			showModal,
 			formRef,
+			formItemRef,
 			model,
 			rules,
 			title,
+			loading,
 			mxOptions,
 			activeColor,
 			activeIconKey,
 			colorList: kbColorList,
 			iconList: kbIconList,
+			tagsList,
+			tagsMax,
 			onShow,
 			onHide,
 			setTitle,
 			getKbIcon,
 			colorClick,
-			iconClick
+			iconClick,
+			tagClick,
+			dynamicTagsUpdate,
+			onPositiveClick,
+			onAfterLeaveDialog
 		}
 	}
 })

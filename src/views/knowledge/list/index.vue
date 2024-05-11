@@ -23,25 +23,44 @@
 						<span class="loading-text">正在加载...</span>
 					</div>
 					<div v-if="!loading && loaded && pageList.length" class="list">
-						<div class="list-item" v-for="item in pageList" :key="item.id">
+						<div class="list-item" v-for="item in pageList" :key="item.KBID">
 							<div class="list-item_top">
 								<div class="info">
 									<div class="info-left">
-										<div class="kb-icon-box" :style="{ backgroundColor: '#1890ff' }">
-											<img :src="getKbIcon('help')" />
+										<div class="kb-icon-box" :style="{ backgroundColor: item.KBColor || '#1890ff' }">
+											<img :src="getKbIcon(item.KBBGImg || 'help')" />
 										</div>
 									</div>
 									<div class="info-right">
-										<n-ellipsis class="i-title" style="max-width: 200px">
-											{{ item.name }}
+										<n-ellipsis class="i-title" style="max-width: 290px; position: relative; top: -5px;">
+											{{ item.KBName }}
+											<template #tooltip>
+												<div style="text-align: center; max-width: 290px;">
+													{{ item.KBName }}
+												</div>
+											</template>
 										</n-ellipsis>
+										<div class="tags">
+											<n-space>
+												<n-tag v-for="(tag, index) in getTags(item.KBLabel)" :key="index" type="info" size="small" round>
+													{{ tag }}
+												</n-tag>
+											</n-space>
+										</div>
 									</div>
 								</div>
-								<n-ellipsis class="desc" :line-clamp="1" style="max-width: 260px">
-									{{ item.desc }}
+								<n-ellipsis class="desc" style="max-width: 360px">
+									{{ item.KBDesc }}
+									<template #tooltip>
+										<div style="text-align: center; max-width: 360px;">
+											{{ item.KBDesc }}
+										</div>
+									</template>
 								</n-ellipsis>
 								<p class="font-num">
-									<span>{{ item.fontNum }} 字</span>
+									<span>{{ 0 }} 知识</span>
+									<n-divider vertical />
+									<span>{{ item.KBCreateTime }}</span>
 								</p>
 							</div>
 							<div class="list-item_bom">
@@ -67,14 +86,22 @@
 										</n-popover>
 									</div>
 									<div class="btn-item">
-										<n-popover trigger="hover">
+										<n-popconfirm
+											positive-text="确定"
+											@positive-click="delClick(item)"
+										>
 											<template #trigger>
-												<n-icon size="20" @click="delClick(item)">
-													<TrashIcon />
-												</n-icon>
+												<n-popover trigger="hover">
+													<template #trigger>
+														<n-icon size="20">
+															<TrashIcon />
+														</n-icon>
+													</template>
+													<span>删除</span>
+												</n-popover>
 											</template>
-											<span>删除</span>
-										</n-popover>
+											确定删除该知识库？
+										</n-popconfirm>
 									</div>
 								</div>
 							</div>
@@ -93,14 +120,16 @@
 		</div>
 
 		<!-- 弹框 -->
-		<CreateDialog ref="createRef" />
+		<CreateDialog ref="createRef" @change="createChange" />
 	</div>
 </template>
 
 <script lang="ts">
 import {
 	ref,
-	defineComponent,
+	computed,
+	watch,
+	defineComponent
 } from "vue";
 import {
 	TrashOutline as TrashIcon,
@@ -115,6 +144,7 @@ import { routeName } from '@/router';
 import { useRouterPush } from '@/composables';
 import CreateDialog from './components/create-dialog.vue';
 import { getKbIcon } from '@/config';
+import { useKnowledgeStore } from '@/store';
 
 
 type RowData = {
@@ -139,41 +169,39 @@ export default defineComponent({
 		const total = ref(0);
 		const pageSize = ref(30);
 		const loading = ref(false);
-		const loaded = ref(false);
+		const loaded = ref(true);
 		const createRef = ref();
 
+		// hooks
 		const message = useMessage();
 		const dialog = useDialog();
 		const { routerPush } = useRouterPush();
+		const knowledge = useKnowledgeStore();
 
-		const getPageList = () => {
-			let list = [
-				{
-					id: '001',
-					name: '知识库001',
-					desc: 'haha',
-					fontNum: 300
-				},
-				{
-					id: '002',
-					name: '知识库002',
-					desc: 'haha111',
-					fontNum: 350
-				}
-			];
+		// methods
+		const init = async () => {
 			loading.value = true;
+			await knowledge.getKBList()
+			getPageList()
+		}
+		init()
+		const getPageList = () => {
+			let list: Knowledge.Base[] = knowledge.knowledgeBaseList;
 			if (search.value) {
 				list = list.filter((item: any) => {
-					const name: string = item.name || "";
+					const name: string = item.KBName || "";
 					return name.includes(search.value);
 				});
 			}
-			pageList.value = list.slice((currentPage.value - 1) * pageSize.value, currentPage.value * pageSize.value);
 			total.value = list.length;
+			pageList.value = list.slice((currentPage.value - 1) * pageSize.value, currentPage.value * pageSize.value);
 			loading.value = false;
 			loaded.value = true;
 		};
-		getPageList()
+
+		const createChange = () => {
+			getPageList()
+		}
 
 		// 跳转创建知识库页面
 		const addClick = () => {
@@ -183,18 +211,30 @@ export default defineComponent({
 		};
 
 		const previewClick = (row: any) => {
-			routerPush({ name: routeName('knowledge_details'), query: { id: row.id } });
+			routerPush({ name: routeName('knowledge_details'), query: { id: row.KBID } });
 		};
 
 		const editClick = (row: any) => {
-			createRef.value.onShow()
+			createRef.value.onShow(row)
 			createRef.value.setTitle('编辑知识库')
 			// routerPush({ name: routeName('knowledge_create'), query: {id: row.id} });
 		};
 
-		const delClick = (row: any) => {
-
+		const delClick = async (row: any) => {
+			const results = await knowledge.deleteKB(row.KBID);
+			if (results) {
+				getPageList()
+				message.success('删除成功');
+			}
 		};
+
+		const getTags = (val: string) => {
+			let res = []
+			try {
+				res = JSON.parse(val)
+			} catch (error) {}
+			return res
+		}
 
 		let timer: any = null
 		const searchChange = (value: any) => {
@@ -241,6 +281,8 @@ export default defineComponent({
 			delClick,
 			editClick,
 			submitClick,
+			createChange,
+			getTags
 		};
 	},
 });
@@ -334,8 +376,8 @@ export default defineComponent({
 				display: flex;
 				flex-wrap: wrap;
 				.list-item {
-					width: 300px;
-					height: 156px;
+					width: 380px;
+					height: 176px;
 					display: flex;
 					flex-direction: column;
 					background-color: var(--baseColor);

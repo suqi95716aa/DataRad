@@ -5,15 +5,18 @@ type ServiceEnv = Record<ServiceEnvType, ServiceEnvConfig>;
 const serviceEnv: ServiceEnv = {
   dev: {
     url: 'http://localhost:8080',
-		url2: 'http://8.134.201.130:8000'
+		url2: 'http://datastrom.e3.luyouxia.net:13696',
+		url3: 'http://datastrom.e3.luyouxia.net:13696' // 知识库域名
   },
   test: {
     url: 'http://localhost:8080',
-		url2: 'http://8.134.201.130:8000'
+		url2: 'http://datastrom.e3.luyouxia.net:13696',
+		url3: 'http://datastrom.e3.luyouxia.net:13696'
   },
   prod: {
     url: 'http://localhost:8080',
-		url2: 'http://8.134.201.130:8000'
+		url2: 'http://datastrom.e3.luyouxia.net:13696',
+		url3: 'http://datastrom.e3.luyouxia.net:13696'
   }
 };
 
@@ -29,6 +32,7 @@ export function getServiceEnvConfig(env: ImportMetaEnv): ServiceEnvConfigWithPro
   return {
     ...config,
     proxyPattern: '/proxy-pattern',
-		proxyPatter2: '/api'
+		proxyPattern2: '/api',
+		proxyPattern3: '/kbapi'
   };
 }

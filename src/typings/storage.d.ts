@@ -32,6 +32,7 @@ declare namespace StorageInterface {
 		chatbotId: string;
 		/* 会话记录 */
 		chatbotRecords: Robot.ChatbotRecordsType[];
-
+		/* 知识库 */
+		knowledgeBaseList: Knowledge.Base[];
   }
 }

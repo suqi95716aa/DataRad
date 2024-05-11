@@ -11,6 +11,7 @@ interface ServiceEnvConfig {
   /** 请求地址 */
   url: string;
 	url2: string;
+	url3: string;
 }
 
 interface ServiceEnvConfigWithProxyPattern extends ServiceEnvConfig {
@@ -21,7 +22,8 @@ interface ServiceEnvConfigWithProxyPattern extends ServiceEnvConfig {
    * - 有多个后端请求实例时，需要创建不同的值
    */
   proxyPattern: '/proxy-pattern';
-	proxyPatter2: '/api';
+	proxyPattern2: '/api';
+	proxyPattern3: '/kbapi';
 }
 
 interface ImportMetaEnv {

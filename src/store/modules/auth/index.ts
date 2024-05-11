@@ -10,6 +10,7 @@ import { useTabStore } from "../tab";
 import { useRouteStore } from "../route";
 import { useRobotStore } from '../robot';
 import { useAppStore } from '../app';
+import { useKnowledgeStore } from '../knowledge';
 import {
 	getToken,
 	getUserInfo,
@@ -56,12 +57,15 @@ export const useAuthStore = defineStore("auth-store", {
 			const { toLogin } = useRouterPush(false);
 			const { resetTabStore } = useTabStore();
 			const { resetRouteStore } = useRouteStore();
+			const { clearKnowledgeStorage } = useKnowledgeStore()
 			const app = useAppStore();
 			const route = unref(router.currentRoute);
+
 
 			app.closeRobotDialog();
 
 			clearAuthStorage();
+			clearKnowledgeStorage();
 			this.$reset();
 
 			if (route.meta.requiresAuth) {
