@@ -171,6 +171,7 @@ export default defineComponent({
 		const loading = ref(false);
 		const loaded = ref(true);
 		const createRef = ref();
+		const delLoading = ref(false);
 
 		// hooks
 		const message = useMessage();
@@ -185,6 +186,7 @@ export default defineComponent({
 			getPageList()
 		}
 		init()
+
 		const getPageList = () => {
 			let list: Knowledge.Base[] = knowledge.knowledgeBaseList;
 			if (search.value) {
@@ -207,7 +209,6 @@ export default defineComponent({
 		const addClick = () => {
 			createRef.value.setTitle('新建知识库')
 			createRef.value.onShow()
-			// routerPush({ name: routeName('knowledge_create'), query: {} });
 		};
 
 		const previewClick = (row: any) => {
@@ -217,11 +218,13 @@ export default defineComponent({
 		const editClick = (row: any) => {
 			createRef.value.onShow(row)
 			createRef.value.setTitle('编辑知识库')
-			// routerPush({ name: routeName('knowledge_create'), query: {id: row.id} });
 		};
 
 		const delClick = async (row: any) => {
+			if (delLoading.value) return
+			delLoading.value = true
 			const results = await knowledge.deleteKB(row.KBID);
+			delLoading.value = false
 			if (results) {
 				getPageList()
 				message.success('删除成功');

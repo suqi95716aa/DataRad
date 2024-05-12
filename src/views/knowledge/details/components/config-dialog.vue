@@ -7,49 +7,50 @@
 		preset="dialog"
 		positive-text="保存"
     negative-text="取消"
+		:on-after-leave="onAfterLeaveDialog"
 	>
-		<div v-if="current === 1" class="dialog-content mt-0">
+		<div class="dialog-content mt-0">
 			<div class="tabs-content">
 				<div class="tabs-top">
-					<n-radio-group v-model:value="kType" name="radiogroup">
+					<n-radio-group v-model:value="kType" :disabled="fileList.length > 0" name="radiogroup">
 						<div class="type-list">
 							<div class="type-item">
-								<n-icon size="22" :depth="3">
-									<icon-local-fa-upload />
+								<n-icon size="28" :depth="3">
+									<icon-local-k-type1 />
 								</n-icon>
 								<div class="type-item-info">
 									<p>直接分段</p>
-									<p>选择文本文件，直接将其按分段进行处理</p>
+									<p>选择文本文件，将其分块进行处理</p>
 								</div>
 								<n-radio :value="1" />
 							</div>
 							<div class="type-item">
-								<n-icon size="22" :depth="3">
-									<icon-local-fa-upload />
+								<n-icon size="32" :depth="3">
+									<icon-local-k-type2 />
 								</n-icon>
 								<div class="type-item-info">
-									<p>传统标题切割</p>
-									<p>选择文本文件，特定文章类型问答</p>
+									<p>特定类型标题分段</p>
+									<p>将具有预设标题样式的知识进行分段</p>
 								</div>
 								<n-radio :value="2" />
 							</div>
 							<div class="type-item">
-								<n-icon size="22" :depth="3">
-									<icon-local-fa-upload />
+								<n-icon size="32" :depth="3">
+									<icon-local-k-type3 />
 								</n-icon>
 								<div class="type-item-info">
-									<p>自定义文章类型</p>
-									<p>通过批量导入问答对，要求提前整理好数据</p>
+									<p>自定义类型标题分段</p>
+									<p>将具有自定义标题样式的知识进行分段</p>
 								</div>
 								<n-radio :value="3" />
 							</div>
 							<div class="type-item">
-								<n-icon size="22" :depth="3">
-									<icon-local-fa-upload />
+								<n-icon size="36" :depth="3">
+									<icon-local-k-type4 />
 								</n-icon>
 								<div class="type-item-info">
-									<p>CSV导入</p>
-									<p>选择文本文件，直接将其按分段进行处理</p>
+									<p>表格类型分段</p>
+									<p>将具有结构化表格信息分段</p>
 								</div>
 								<n-radio :value="4" />
 							</div>
@@ -68,7 +69,7 @@
 								:default-upload="false"
 								:show-file-list="false"
 								v-model:file-list="fileList"
-								@change="handleUploadChange"
+								@change="uploadChange"
 							>
 								<n-upload-dragger>
 									<div style="margin-bottom: 12px">
@@ -88,7 +89,16 @@
 							</n-upload>
 						</div>
 						<div class="file-list mt-20">
-							<div class="file-item" uploading v-for="(item, index) in fileList" :key="item.id">
+							<div class="file-item" :class="{ 'disabled': uploading, 'error': uploadFail }" v-for="(item, index) in fileList" :key="item.id">
+								<div v-if="uploading" class="file-progress" @click.stop.prevent>
+									<n-progress
+										type="line"
+										:border-radius="0"
+										:percentage="percentage"
+										:indicator-placement="'inside'"
+										processing
+									/>
+								</div>
 								<div class="item-left">
 									<img src="@/assets/images/xlsx.png" />
 								</div>
@@ -97,8 +107,9 @@
 									<p style="font-size: 12px;">{{ countFileSize(item.file) }}MB</p>
 								</div>
 								<div class="item-right">
-									<span class="pre-btn" @click="previewFileClick(item.file)">预览</span>
-									<n-divider vertical />
+									<span v-if="uploadSuccess" class="pre-btn" @click="previewFileClick(item.file)">预览</span>
+									<span v-if="uploadFail" class="pre-btn" @click="resetUploadFileClick(item.file)">重新上传</span>
+									<n-divider v-if="uploadFail || uploadSuccess" vertical />
 									<n-icon class="del-btn" size="16" @click="delFileClick(index)">
 										<TrashIcon />
 									</n-icon>
@@ -107,12 +118,10 @@
 						</div>
 						<div class="tabs-form">
 							<n-form
-								ref="formRef"
+								ref="form"
+								:inline="false"
 								:model="formVal"
 								:rules="rules"
-								label-placement="left"
-								:label-width="110"
-								require-mark-placement="right-hanging"
 								size="small"
 							>
 								<n-form-item v-if="[1].includes(kType)" label="分块长度" path="size">
@@ -127,7 +136,7 @@
 									</n-popover>
 									<span class="k-def-text" @click="formVal.size = 2000">恢复默认值</span>
 								</n-form-item>
-								<n-form-item v-if="[1].includes(kType)" label="分块重叠数" path="overlap">
+								<n-form-item v-if="[1].includes(kType)" label="分块重合数" path="overlap">
 									<n-input-number v-model:value="formVal.overlap" :min="50" :max="200" />
 									<n-popover trigger="hover">
 										<template #trigger>
@@ -139,7 +148,7 @@
 									</n-popover>
 									<span class="k-def-text" @click="formVal.overlap = 100">恢复默认值</span>
 								</n-form-item>
-								<n-form-item v-if="[4].includes(kType)" label="切割符" path="delimiter">
+								<n-form-item v-if="[4].includes(kType) && isCsv" label="自定义分割类型" path="delimiter">
 									<n-input v-model:value="formVal.delimiter" :maxlength="5" style="width: 217px;" placeholder="请输入" />
 									<n-popover trigger="hover">
 										<template #trigger>
@@ -151,8 +160,8 @@
 									</n-popover>
 									<span class="k-def-text" @click="formVal.delimiter = ','">恢复默认值</span>
 								</n-form-item>
-								<n-form-item v-if="[3].includes(kType)" label="头部切分方式" path="splitHeadersType">
-									<n-input v-model:value="formVal.splitHeadersType" :maxlength="10" style="width: 217px;" placeholder="请输入" />
+								<n-form-item v-if="[3].includes(kType)" label="自定义头部类型" path="splitHeadersType">
+									<n-select v-model:value="formVal.splitHeadersType" :options="splitTypeOpts" style="width: 300px;" placeholder="请选择" />
 									<n-popover trigger="hover">
 										<template #trigger>
 											<n-icon size="20" style="margin-left: 10px;cursor: pointer;" color="#8d8e99">
@@ -161,88 +170,43 @@
 										</template>
 										<span>您可以为每个知识标记<br/>对应的知识类型，以达到更好<br/>的知识提取效果</span>
 									</n-popover>
-									<span class="k-def-text" @click="formVal.splitHeadersType = '1.1'">恢复默认值</span>
-								</n-form-item>
-								<n-form-item>
-									<n-button type="info" @click="addClick">确定导入</n-button>
+									<span class="k-def-text" @click="formVal.splitHeadersType = '1'">恢复默认值</span>
 								</n-form-item>
 							</n-form>
+							<n-button type="info" :loading="addLoading" @click="previewsKClick">确定导入</n-button>
 						</div>
 					</div>
 					<div class="tabs-main-right">
 						<p class="k-title">
 							<span>
-								<span>{{ showPreview ?  '知识预览' : '知识模板' }}</span>
-								<n-popover trigger="hover">
+								<span>{{ showPreview ? `知识预览（${previewsInfo?.chunk_num}组）` : '类型说明' }}</span>
+								<!-- <n-popover trigger="hover">
 									<template #trigger>
 										<n-icon size="20" style="margin-left: 4px;cursor: pointer;vertical-align: text-bottom;" color="#8d8e99">
 											<HelpIcon />
 										</n-icon>
 									</template>
 									<span>您可以为每个知识标记<br/>对应的知识类型，以达到更好<br/>的知识提取效果</span>
-								</n-popover>
+								</n-popover> -->
 							</span>
-							<span @click="showPreview = !showPreview">{{ showPreview ?  '展示模板' : '展示预览' }}</span>
+							<span v-if="previewsInfo?.file_name" @click="showPreview = !showPreview">{{ showPreview ?  '展示模板' : '展示预览' }}</span>
 						</p>
 						<div class="k-preview">
 							<div v-show="showPreview" class="k-preview-content">
-								<div class="k-preview-list">
-									<div class="k-preview-item">
-										<p class="k-t-1">问答类知识-xlsx</p>
-										<p class="k-p-1">适用场景</p>
-										<p class="k-p-2">适用于问答对类型，表头为"问题"、"答案"，每行一组问答</p>
-										<p class="k-p-1">
-											<span>建议格式</span>
-											<span>下载模板</span>
+								<div v-if="previewsInfo?.file_name" class="k-preview-list">
+									<div v-for="(item, index) in previewsInfo?.chunk_info" :key="index" class="k-preview-item">
+										<p class="k-t-1 mb-10"><span class="k-num mr-8">{{ item.chunk_num }}</span>{{ previewsInfo?.file_name }}</p>
+										<p class="k-p-2">
+											<n-ellipsis expand-trigger="click" line-clamp="5" :tooltip="false">
+												{{ item.text }}
+											</n-ellipsis>
 										</p>
-										<div class="k-table">
-											<n-table :bordered="false" :single-line="false">
-												<thead>
-													<tr>
-														<th>问题</th>
-														<th>答案</th>
-													</tr>
-												</thead>
-												<tbody>
-													<tr>
-														<td>在这里填充问题，可多个</td>
-														<td>在这里填充答案</td>
-													</tr>
-												</tbody>
-											</n-table>
-										</div>
 									</div>
 								</div>
-								<div class="k-preview-empty">暂无可预览内容</div>
+								<div v-else class="k-preview-empty">暂无可预览内容</div>
 							</div>
 							<div v-show="!showPreview" class="k-preview-template">
-								<div class="k-preview-list">
-									<div v-for="item in 8" :key="item" class="k-preview-item">
-										<p class="k-t-1 mb-10">问答类知识-xlsx</p>
-										<p class="k-p-1 mb-10">适用场景</p>
-										<p class="k-p-2 mb-10">适用于问答对类型，表头为"问题"、"答案"，每行一组问答</p>
-										<p class="k-p-1 k-flex mb-10">
-											<span>建议格式</span>
-											<span class="k-cur">下载模板</span>
-										</p>
-										<div class="k-table">
-											<n-table :bordered="true" :single-line="false">
-												<thead>
-													<tr>
-														<th style="background-color: #e8e9eb;">问题</th>
-														<th style="background-color: #e8e9eb;">答案</th>
-													</tr>
-												</thead>
-												<tbody>
-													<tr>
-														<td style="font-size: 12px;color: #767c82;">在这里填充问题，可多个</td>
-														<td style="font-size: 12px;color: #767c82;">在这里填充答案</td>
-													</tr>
-												</tbody>
-											</n-table>
-										</div>
-									</div>
-								</div>
+								<KTemplate />
 							</div>
 						</div>
 					</div>
@@ -255,7 +219,7 @@
 				</div>
 				<div class="footer-right">
 					<n-button @click="cancelClick">取消</n-button>
-					<n-button type="info" style="margin-left: 20px;" @click="saveClick">确定保存</n-button>
+					<n-button type="info" style="margin-left: 20px;" :loading="saveLoading" @click="saveClick">确定保存</n-button>
 				</div>
 			</div>
 		</template>
@@ -270,6 +234,7 @@ import {
 	CloudUploadOutline as CloudUploadIcon,
 	EllipsisVerticalOutline as EllipsisIcon
 } from "@vicons/ionicons5";
+import KTemplate from './k-template.vue';
 import { ref, computed, defineComponent } from 'vue';
 import { useRoute } from "vue-router";
 import type { UploadFileInfo, FormInst, FormItemRule, StepsProps } from "naive-ui";
@@ -278,26 +243,14 @@ import { useAuthStore, useKnowledgeStore } from '@/store';
 import { fetchPreviewsUploadKnowledge } from '@/service';
 import { REGEXP_URL } from '@/config';
 
-let typeOpts = [
+let splitTypeOpts = [
 	{
-		label: '文章知识',
-		value: 1
+		label: '连续的数字点分隔符，如 1.1.1.1',
+		value: '1'
 	},
 	{
-		label: '问答知识-文档',
-		value: 2
-	},
-	{
-		label: '问答知识-表格',
-		value: 3
-	},
-	{
-		label: '商品库-表格',
-		value: 4
-	},
-	{
-		label: '自定义格式',
-		value: 5
+		label: '圆括号数字样式,，如(1)',
+		value: '2'
 	},
 ]
 
@@ -311,19 +264,20 @@ export default defineComponent({
 		AddIcon,
 		CloudUploadIcon,
 		TrashIcon,
-		EllipsisIcon
+		EllipsisIcon,
+		KTemplate
 	},
-	setup() {
+	emits: ['change'],
+	setup(props, ctx) {
 		const showModal = ref(false);
 		const title = ref('上传知识');
-		const currentRef = ref<number | null>(1);
 		const fileListRef = ref<UploadFileInfo[]>([]);
 		const formRef = ref<FormInst | null>(null);
 		const formVal = ref({
 			size: 2000,
 			overlap:100,
 			delimiter: ',',
-			splitHeadersType: '1.1',
+			splitHeadersType: '1',
 			urlList: [
 				{
 					url: ''
@@ -334,8 +288,13 @@ export default defineComponent({
 		const kType = ref(1); // 知识分割类型
 		const uploading = ref(false);
 		const addLoading = ref(false);
+		const saveLoading = ref(false);
+		const uploadSuccess = ref(false); // 上传文件成功
+		const uploadFail = ref(false); // 上传文件失败
 		const fileInfo = ref<InfoType>();
 		const KBID = ref("");
+		const previewsInfo = ref<Knowledge.Previews>();
+		const percentageRef = ref(0); // 上传进度值
 
 		// hooks
 		const message = useMessage()
@@ -346,16 +305,16 @@ export default defineComponent({
 
 		// computed
 		const fileAccept = computed(() => {
-			let res: string = '.xlsx, .doc, .docx, .txt, .pdf, .csv, .md'
+			let res: string = '.xlsx, .docx, .txt, .pdf, .csv, .md'
 			switch(kType.value) {
 				case 1:
-					res = '.doc, .docx, .txt, .pdf, .md'
+					res = '.docx, .txt, .pdf, .md'
 					break
 				case 2:
-					res = '.doc, .docx, .md'
+					res = '.docx, .md'
 					break
 				case 3:
-					res = '.doc, .docx, .txt, .pdf, .md'
+					res = '.docx, .txt, .pdf, .md'
 					break
 				case 4:
 					res = '.xlsx, .csv'
@@ -368,18 +327,30 @@ export default defineComponent({
 			let res: string = ''
 			switch(kType.value) {
 				case 1:
-					res = 'txt、doc、docx、pdf、md'
+					res = 'txt、docx、pdf、md'
 					break
 				case 2:
 					res = 'doc、docx、md'
 					break
 				case 3:
-					res = 'txt、doc、docx、pdf、md'
+					res = 'txt、docx、pdf、md'
 					break
 				case 4:
 					res = 'xlsx、csv'
 					break
 			}
+			return res
+		})
+
+		const isCsv = computed(() => {
+			let res = false
+			if (fileListRef.value.length > 0) {
+				const obj: UploadFileInfo = fileListRef.value[0]
+				if (obj.type === 'text/csv') {
+					res = true
+				}
+			}
+
 			return res
 		})
 
@@ -392,25 +363,82 @@ export default defineComponent({
 			showModal.value = false;
 		};
 
-		const handleUploadChange = async (options: {
-			file: UploadFileInfo;
-			fileList: Array<UploadFileInfo>;
-			event?: Event;
-		}) => {
-			console.log("handleUploadChange---options-----", options);
+		const onAfterLeaveDialog = () => {
+			console.log('onAfterLeaveDialog-----')
+			formVal.value.size = 2000
+			formVal.value.overlap = 100
+			formVal.value.delimiter = ','
+			formVal.value.splitHeadersType = '1'
+			formVal.value.urlList = [
+				{
+					url: ''
+				}
+			]
+			kType.value = 1;
+			previewsInfo.value = {} as Knowledge.Previews;
+			showPreview.value = false;
+			fileListRef.value = [];
+		}
+
+		let timer: any = null
+		type statusType = 'loading' | 'fail' | 'success'
+		const handlePercentageVal = (type?: statusType) => {
+			if (type === 'fail') {
+				clearInterval(timer)
+				return
+			} else if (type === 'success') {
+				clearInterval(timer)
+				percentageRef.value = 100
+				return
+			}
+			percentageRef.value = 10
+			timer = setInterval(() => {
+				percentageRef.value += 10
+				if (percentageRef.value >= 99) {
+					percentageRef.value = 99
+					clearInterval(timer)
+				}
+			}, 1000)
+		}
+
+		const confirmUploadFile = async (file: any) => {
 			uploading.value = true
-			const file: any = options.file
+			uploadSuccess.value = false
+			uploadFail.value = false
 			const formData = new FormData()
 			formData.append('Uid', userInfo.userId)
-			formData.append('File', file.file)
+			formData.append('File', file)
+			handlePercentageVal()
 			const results = await fetchPreviewsUploadKnowledge(formData)
-			uploading.value = false
-			if (results.error) return false;
+
+			if (results.error) {
+				uploadFail.value = true
+				uploading.value = false
+				handlePercentageVal('fail')
+				return false;
+			}
 			const resData: any = results.data || {}
+
+			handlePercentageVal('success')
+
+			setTimeout(() => {
+				uploadSuccess.value = true
+				uploading.value = false
+			}, 500)
+
 			fileInfo.value = {
 				name: resData.file_name
 			}
 			message.success('上传成功')
+		}
+
+		const uploadChange = (options: {
+			file: UploadFileInfo;
+			fileList: Array<UploadFileInfo>;
+			event?: Event;
+		}) => {
+			const file: any = options.file
+			confirmUploadFile(file.file)
 		};
 
 		const countFileSize = (file: any) => {
@@ -426,57 +454,10 @@ export default defineComponent({
 			return size.toFixed(2)
 		}
 
-		const addClick = () => {
-			if (!fileInfo.value?.name) return message.warning('请上传文件')
-			formRef.value?.validate(async (errors) => {
-				if (!errors) {
-					let Kconfig = {}
-					switch(kType.value) {
-						case 1:
-							Kconfig = {
-								chunk_size: formVal.value.size,
-								chunk_overlap: formVal.value.overlap,
-								file_path: fileInfo.value?.name
-							}
-							break
-						case 2:
-							Kconfig = {
-								file_path: fileInfo.value?.name
-							}
-							break
-						case 3:
-							Kconfig = {
-								file_path: fileInfo.value?.name,
-								split_headers_type: ''
-							}
-							break
-						case 4:
-							Kconfig = {
-								file_path: fileInfo.value?.name,
-								delimiter: formVal.value.delimiter,
-							}
-							break
-					}
-					const params = {
-						KBID: KBID.value,
-						Kconfig,
-						FileName: fileInfo.value?.name,
-						Type: kType.value,
-					}
-
-					addLoading.value = true
-					const results = await knowledge.addK(params)
-					addLoading.value = false
-
-					if (results) {
-						message.success('保存成功');
-					}
-				}
-			})
-		}
-
 		const delFileClick = (index: number) => {
 			fileListRef.value.splice(index, 1)
+			previewsInfo.value = {} as Knowledge.Previews
+			showPreview.value = false
 		}
 
 		const previewFileClick = (file: any) => {
@@ -495,41 +476,107 @@ export default defineComponent({
 		}
 
 		const cancelClick = () => {
-			switch(currentRef.value) {
-				case 1:
-					showModal.value = false;
-					break
-				case 2:
-					currentRef.value = 1;
-					title.value = '上传知识';
-					break
-			}
+			showModal.value = false;
+		}
+
+		const resetUploadFileClick = (file: any) => {
+			confirmUploadFile(file)
+		}
+
+		const previewsKClick = () => {
+			if (fileListRef.value.length === 0 || uploading.value || uploadFail.value) return message.warning('请上传文件')
+			formRef.value?.validate(async (errors) => {
+				if (!errors) {
+					let Kconfig = {}
+					switch(kType.value) {
+						case 1:
+							Kconfig = {
+								chunk_size: formVal.value.size,
+								chunk_overlap: formVal.value.overlap,
+							}
+							break
+						case 2:
+							Kconfig = {}
+							break
+						case 3:
+							Kconfig = {
+								split_headers_type: formVal.value.splitHeadersType * 1
+							}
+							break
+						case 4:
+							Kconfig = {
+								delimiter: formVal.value.delimiter,
+							}
+							break
+					}
+					const params = {
+						Kconfig,
+						FileName: fileInfo.value?.name,
+						Type: kType.value,
+					}
+
+					addLoading.value = true
+					const results = await knowledge.previewsK(params)
+					addLoading.value = false
+
+					if (results) {
+						previewsInfo.value = results
+						showPreview.value = true
+						message.success('导入成功');
+					}
+				}
+			})
 		}
 
 		const saveClick = () => {
-			switch(currentRef.value) {
-				case 1:
-					handleAddFile();
-					return false;
-					currentRef.value = 2;
-					title.value = '知识配置';
-					break
-				case 2:
-					showModal.value = false;
-					break
-			}
-		}
+			if (fileListRef.value.length === 0 || uploading.value || uploadFail.value) return message.warning('请上传文件')
+			formRef.value?.validate(async (errors) => {
+				if (!errors) {
+					let Kconfig = {}
+					switch(kType.value) {
+						case 1:
+							Kconfig = {
+								chunk_size: formVal.value.size,
+								chunk_overlap: formVal.value.overlap,
+							}
+							break
+						case 2:
+							Kconfig = {}
+							break
+						case 3:
+							Kconfig = {
+								split_headers_type: formVal.value.splitHeadersType * 1
+							}
+							break
+						case 4:
+							Kconfig = {
+								delimiter: formVal.value.delimiter,
+							}
+							break
+					}
+					const params = {
+						KBID: KBID.value,
+						Kconfig,
+						FileName: fileInfo.value?.name,
+						Type: kType.value,
+					}
 
-		const handleAddFile = () => {
-			const fileList = fileListRef.value;
-			console.log('fileList-----', fileList)
-		}
+					saveLoading.value = true
+					const results = await knowledge.addK(params)
+					saveLoading.value = false
 
+					if (results) {
+						message.success('保存成功');
+						showModal.value = false;
+						ctx.emit('change')
+					}
+				}
+			})
+		}
 
 		return {
 			showModal,
 			title,
-			current: currentRef,
 			currentStatus: ref<StepsProps['status']>('process'),
 			fileList: fileListRef,
 			form: formRef,
@@ -575,25 +622,38 @@ export default defineComponent({
 					required: true,
 					message: '请输入切割符',
 					trigger: ['input', 'blur']
+				},
+				splitHeadersType: {
+					required: true,
+					message: '请选择自定义头部类型',
+					trigger: ['input', 'blur']
 				}
 			},
 			kType,
 			showPreview,
 			fileAccept,
 			fileAcceptText,
-			typeOpts,
+			splitTypeOpts,
 			uploading,
 			addLoading,
+			saveLoading,
+			previewsInfo,
+			uploadSuccess,
+			uploadFail,
+			percentage: percentageRef,
+			isCsv,
 			onShow,
 			onHide,
-			handleUploadChange,
+			onAfterLeaveDialog,
+			uploadChange,
 			countFileSize,
 			delFileClick,
 			previewFileClick,
 			addUrlClick,
 			removeUrlClick,
 			cancelClick,
-			addClick,
+			resetUploadFileClick,
+			previewsKClick,
 			saveClick
 		}
 	}
@@ -721,7 +781,7 @@ export default defineComponent({
 				overflow: hidden;
 				.k-preview-content {
 					height: 100%;
-					overflow: hidden;
+					overflow: auto;
 
 					.k-preview-empty {
 						text-align: center;
@@ -750,9 +810,18 @@ export default defineComponent({
 							.mb-10 {
 								margin-bottom: 10px;
 							}
+							.mr-8 {
+								margin-right: 8px;
+							}
 							.k-t-1 {
 								font-size: 14px;
 								font-weight: 500;
+							}
+							.k-num {
+								padding: 2px 4px;
+								border-radius: 2px;
+								border: 1px solid #e0e0e0;
+								background-color: #fafafa;
 							}
 							.k-p-1 {
 								font-size: 12px;
@@ -783,6 +852,7 @@ export default defineComponent({
 	max-height: 360px;
 	overflow-y: auto;
 	.file-item {
+		position: relative;
 		display: flex;
 		padding: 20px;
 		border-radius: 10px;
@@ -791,6 +861,31 @@ export default defineComponent({
 		box-sizing: border-box;
 		&:hover {
 			border: 1px solid #1890ff;
+		}
+		&.disabled {
+			&:hover {
+				border: 1px solid #e0e0e0;
+			}
+		}
+		&.error {
+			border: 1px solid #f5222d;
+			&:hover {
+				border: 1px solid #f5222d;
+			}
+		}
+		.file-progress {
+			position: absolute;
+			top: 0;
+			left: 0;
+			right: 0;
+			bottom: 0;
+			z-index: 9;
+			background-color: rgba(0,0,0,0.1);
+			border-radius: 10px;
+			overflow: hidden;
+			box-sizing: border-box;
+			display: flex;
+			align-items: flex-end;
 		}
 		.item-left {
 			flex: 0 0 36px;

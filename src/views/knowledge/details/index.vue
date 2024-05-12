@@ -88,9 +88,8 @@
 								</div>
 							</div>
 							<div class="update-time">
-								<span>{{ 0 }} 字</span><n-divider vertical /><span
-									>更新时间：{{ item.KUpdateTime }}</span
-								>
+								<!-- <span>{{ 0 }} 字</span><n-divider vertical /> -->
+								<span>新建时间：{{ item.KCreateTime }}</span>
 							</div>
 							<div class="kb-id">
 								<span>文档id：{{ item.KID }}</span>
@@ -120,17 +119,17 @@
 										<span>预览</span>
 									</n-popover>
 								</div>
-								<div class="btn-item">
+								<!-- <div class="btn-item">
 									<n-popover trigger="hover">
 										<template #trigger>
 											<n-icon size="20" @click="editClick(item)">
 												<CreateIcon />
 											</n-icon>
 										</template>
-										<span>配置</span>
+										<span>编辑</span>
 									</n-popover>
-								</div>
-								<div class="btn-item">
+								</div> -->
+								<!-- <div class="btn-item">
 									<n-popover trigger="hover">
 										<template #trigger>
 											<n-icon size="20" @click="downloadClick(item)">
@@ -139,16 +138,24 @@
 										</template>
 										<span>下载</span>
 									</n-popover>
-								</div>
+								</div> -->
 								<div class="btn-item">
-									<n-popover trigger="hover">
+									<n-popconfirm
+										positive-text="确定"
+										@positive-click="delClick(item)"
+									>
 										<template #trigger>
-											<n-icon size="20" @click="delClick(item)">
-												<TrashIcon />
-											</n-icon>
+											<n-popover trigger="hover">
+												<template #trigger>
+													<n-icon size="20">
+														<TrashIcon />
+													</n-icon>
+												</template>
+												<span>删除</span>
+											</n-popover>
 										</template>
-										<span>删除</span>
-									</n-popover>
+										确定删除该知识？
+									</n-popconfirm>
 								</div>
 							</div>
 						</div>
@@ -173,7 +180,8 @@
 		</div>
 
 		<!-- 弹框 -->
-		<ConfigDialog ref="configRef" />
+		<ConfigDialog ref="configRef" @change="createChange" />
+		<PreviewsDialog ref="previewsRef" />
 	</div>
 </template>
 
@@ -190,6 +198,7 @@ import {
 } from "@vicons/ionicons5";
 import { useMessage } from "naive-ui";
 import ConfigDialog from "./components/config-dialog.vue";
+import PreviewsDialog from './components/previews-dialog.vue';
 import { ref, watch, defineComponent } from "vue";
 import { routeName } from "@/router";
 import { useRoute } from "vue-router";
@@ -212,6 +221,7 @@ export default defineComponent({
 		CreateIcon,
 		EyeIcon,
 		DownloadIcon,
+		PreviewsDialog
 	},
 	setup() {
 		const tabStore = useTabStore();
@@ -224,38 +234,35 @@ export default defineComponent({
 		const total = ref(0);
 		const pageSize = ref(30);
 		const configRef = ref();
+		const previewsRef = ref();
 		const KBID = ref("");
 		const kbase = ref<Knowledge.Base>();
+		const delLoading = ref(false);
 
 		const { routerPush } = useRouterPush();
-		const { knowledgeBaseList, addK } = useKnowledgeStore();
+		const knowledge = useKnowledgeStore();
 		const route = useRoute();
 		KBID.value = route.query.id + "";
-
-		kbase.value = knowledgeBaseList.find(
+		kbase.value = knowledge.knowledgeBaseList.find(
 			(item: Knowledge.Base) => item.KBID === KBID.value
 		);
-
-		console.log("kbase-----", kbase.value);
 
 		// hooks
 		const message = useMessage();
 
-		watch(
-			() => kbase.value?.data,
-			(newVal) => {
-				console.log("newVal----", newVal);
-				getPageList();
-			},
-			{
-				deep: true,
-			}
-		);
+		const init = async () => {
+			loading.value = true;
+			await knowledge.getKBList()
+			kbase.value = knowledge.knowledgeBaseList.find(
+				(item: Knowledge.Base) => item.KBID === KBID.value
+			);
+			getPageList()
+		}
+		init()
 
 		// methods
 		const getPageList = () => {
 			let list = kbase.value?.data || [];
-			loading.value = true;
 			if (searchVal.value) {
 				list = list.filter((item: any) => {
 					const name: string = item.KName || "";
@@ -270,7 +277,10 @@ export default defineComponent({
 			loading.value = false;
 			loaded.value = true;
 		};
-		getPageList();
+
+		const createChange = () => {
+			getPageList()
+		}
 
 		const backClick = () => {
 			routerPush({ name: routeName("knowledge_list") });
@@ -294,24 +304,15 @@ export default defineComponent({
 		};
 
 		const addClick = async () => {
-			configRef.value.onShow()
-			// const params = {
-			// 	KBID: KBID.value,
-			// 	FileName: "新建文本文档.txt",
-			// 	Type: "1",
-			// 	KConfig: {
-			// 		"chunk_size": 2000,
-			// 		"chunk_overlap": 100
-			// 	}
-			// };
-			// const results = await addK(params);
-
-			// if (results) {
-
-			// }
+			configRef.value.onShow();
 		};
 
-		const previewClick = (item: ItemType) => {};
+		const previewClick = (item: ItemType) => {
+			previewsRef.value.onShow({
+				KBID: KBID.value,
+				KID: item.KID
+			});
+		};
 
 		const editClick = (item: ItemType) => {
 			configRef.value.onShow();
@@ -319,7 +320,16 @@ export default defineComponent({
 
 		const downloadClick = (item: ItemType) => {};
 
-		const delClick = (item: ItemType) => {};
+		const delClick = async (item: ItemType) => {
+			if (delLoading.value) return
+			delLoading.value = true
+			const results = await knowledge.delK(KBID.value, item.KID);
+			delLoading.value = false
+			if (results) {
+				getPageList()
+				message.success('删除成功');
+			}
+		};
 
 		const copyClick = (val: string) => {
 			navigator.clipboard.writeText(val);
@@ -328,6 +338,7 @@ export default defineComponent({
 
 		return {
 			configRef,
+			previewsRef,
 			loading,
 			loaded,
 			searchVal,
@@ -347,6 +358,7 @@ export default defineComponent({
 			downloadClick,
 			delClick,
 			copyClick,
+			createChange
 		};
 	},
 });

@@ -5,7 +5,10 @@ import {
 	fetchAddKnowledgeBase,
 	fetchUpdateKnowledgeBase,
 	fetchDeleteKnowledgeBase,
-	fetchAddKnowledge
+	fetchAddKnowledge,
+	fetchDeleteKnowledge,
+	fetchPreviewsKnowledge,
+	fetchGetKnowledge
 } from "@/service";
 import { useAuthStore } from "../auth";
 import { localStg } from "@/utils";
@@ -67,8 +70,6 @@ export const useKnowledgeStore = defineStore("knowledge-store", {
 			formData.append("Uid", userInfo.userId);
 			const results = await fetchUpdateKnowledgeBase(formData);
 
-			console.log('results-----fasf', results)
-
 			if (results.error) return false;
 
 			const fIndex = this.knowledgeBaseList.findIndex(
@@ -85,8 +86,8 @@ export const useKnowledgeStore = defineStore("knowledge-store", {
 		async deleteKB(id: string) {
 			const { userInfo } = useAuthStore();
 			const formData = new FormData();
-			formData.append("KBID", id);
 			formData.append("Uid", userInfo.userId);
+			formData.append("KBID", id);
 			const results = await fetchDeleteKnowledgeBase(formData);
 
 			if (results.error) return false;
@@ -102,38 +103,94 @@ export const useKnowledgeStore = defineStore("knowledge-store", {
 			}
 			return false;
 		},
+		// 预览知识
+		async previewsK(params: any) {
+			const { userInfo } = useAuthStore();
+			let resObj = {} as Knowledge.Previews
+			const formData = new FormData();
+			formData.append("Uid", userInfo.userId);
+			formData.append("FileName", params.FileName);
+			formData.append("Type", params.Type);
+			formData.append("Kconfig", JSON.stringify(params.Kconfig));
+			const results = await fetchPreviewsKnowledge(formData);
+
+			if (results.error) return false;
+
+			if (results.data) {
+				resObj = results.data as Knowledge.Previews
+			}
+
+			return resObj
+		},
 		// 添加知识
 		async addK(params: any) {
 			const { userInfo } = useAuthStore();
-			const obj = {
-				KID: nanoid(),
-				KName: "新建文本文档.txt",
-				KType: "1",
-				KConfig: null,
-				KCreateTime: "2024-05-02 14:37:10",
-				KUpdateTime: "2024-05-02 14:37:10",
-			};
-			let results
-			try {
-				const formData = new FormData();
-				formData.append("KBID", params.KBID);
-				formData.append("Uid", userInfo.userId);
-				formData.append("FileName", params.FileName);
-				formData.append("Type", params.Type);
-				formData.append("Kconfig", JSON.stringify(params.Kconfig));
-				results = await fetchAddKnowledge(formData);
-			} catch (error) {}
+			const formData = new FormData();
+			formData.append("KBID", params.KBID);
+			formData.append("Uid", userInfo.userId);
+			formData.append("FileName", params.FileName);
+			formData.append("Type", params.Type);
+			formData.append("Kconfig", JSON.stringify(params.Kconfig));
+			const results = await fetchAddKnowledge(formData);
 
-			// if (!results || (results && results.error)) return false;
+			if (results.error) return false;
 
 			this.knowledgeBaseList.forEach(item => {
 				if (item.KBID === params.KBID) {
-					item.data.push(obj)
+					const obj = results.data as Knowledge.K
+					item.data.unshift(obj)
+				}
+			})
+			localStg.set("knowledgeBaseList", this.knowledgeBaseList);
+			return true
+		},
+		// 删除知识
+		async delK(kbid: string, kid: string) {
+			const { userInfo } = useAuthStore();
+			const formData = new FormData();
+			formData.append("Uid", userInfo.userId);
+			formData.append("KBID", kbid);
+			formData.append("KID", kid);
+			const results = await fetchDeleteKnowledge(formData);
+
+			if (results.error) return false;
+
+			let status = false
+
+			this.knowledgeBaseList.forEach(item => {
+				if (item.KBID === kbid) {
+					const data = item.data as Knowledge.K[]
+					const fIndex = data.findIndex(i => i.KID === kid)
+					if (fIndex !== -1) {
+						status = true
+						data.splice(fIndex, 1)
+					}
 				}
 			})
 
-			return true
+			if (status) {
+				localStg.set("knowledgeBaseList", this.knowledgeBaseList);
+				return true;
+			}
+			return false;
+		},
+		// 获取知识详情
+		async getKDetails(params: any) {
+			const { userInfo } = useAuthStore();
+			const formData = new FormData();
+			let resList = [] as Knowledge.KDetails[];
+			formData.append("Uid", userInfo.userId);
+			formData.append("KBID", params.KBID);
+			formData.append("KID", params.KID);
+			formData.append("Limit", params.Limit);
+			formData.append("Offset", params.Offset);
+			const	results = await fetchGetKnowledge(formData);
+			if (results.error) return false;
 
+			if (results.data) {
+				resList = results.data as Knowledge.KDetails[]
+			}
+			return resList;
 		},
 		/** 去除知识库相关缓存 */
 		clearKnowledgeStorage() {

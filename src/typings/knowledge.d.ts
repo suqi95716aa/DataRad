@@ -20,4 +20,22 @@ declare namespace Knowledge {
 		KBUpdateTime: string;
 		data: K[];
 	}
+
+	interface Chunk_info {
+		chunk_num: string;
+		text: string;
+	}
+
+	interface Previews {
+		type: string;
+		file_name: string;
+		chunk_num: number;
+		total_chunk_num: number;
+		chunk_info: Chunk_info[];
+	}
+	interface KDetails {
+		pk: number | string;
+		text: string;
+		sequence: number;
+	}
 }
