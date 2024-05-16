@@ -105,9 +105,9 @@ export default defineComponent({
 		const sendClick = async () => {
 			if (!sendValue.value) return;
 
-			const res = robot.checkChatbotSettings()
+			// const res = robot.checkChatbotSettings()
 
-			if (!res) return
+			// if (!res) return false
 
 			let value = sendValue.value;
 			sendValue.value = "";

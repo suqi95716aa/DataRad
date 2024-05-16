@@ -14,9 +14,9 @@
 			<!-- <img v-else src="~@/assets/images/test.jpg" alt="" /> -->
 		</div>
 		<div class="card-box">
-			<div class="card-box_top" :class="{'t-r': item.userType === 1}">
+			<!-- <div class="card-box_top" :class="{'t-r': item.userType === 1}">
 				<span class="datetime">{{ item.datetime }}</span>
-			</div>
+			</div> -->
 			<div class="card-box_mid">
 				<div class="card-box-inner_left" :class="{'flex-fill': item.state === -2}">
 					<ChatCardLoading v-if="item.loading" />
@@ -25,7 +25,10 @@
 						v-if="item.loaded && !item.loading && !item.error"
 						class="results"
 					>
-						<div v-if="item.state === 1" class="success-results">
+						<div v-if="item.state === 0" class="success-results">
+							<RobotReply :success="true" :type="item.type"/>
+						</div>
+						<div v-else-if="item.state === 1" class="success-results">
 							<p v-if="item.type === 1" class="c-text">{{ item.value }}</p>
 							<ChatCardChart :card-data="item" v-else-if="item.type === 2" />
 							<div v-if="item?.data?.spss_reasoning" class="reasoning">
@@ -52,6 +55,7 @@
 						:options="getDropdownOpts(item)"
 						size="small"
 						:placement="item.userType === 1 ? 'left' : 'right'"
+						:disabled="item.loading"
 						@select="(key) => handleSelect(key, item)"
 					>
 						<n-icon class="evs-icon" size="18">
@@ -138,7 +142,6 @@ export default defineComponent({
 		const handleSelect = (key: string, item: any) => {
 			switch (key) {
 				case "chart":
-					console.log('item------', item)
 					robot.chatbotRecordId = item.id;
 					robot.showRightContent = true;
 					robot.chatbotRightContentType = 'chart';
@@ -146,7 +149,6 @@ export default defineComponent({
 					EventBus.emit('refresh-visual-data');
 					break
 				case "sql":
-					console.log('item------', item);
 					robot.chatbotRecordId = item.id;
 					robot.showRightContent = true;
 					robot.chatbotRightContentType = 'sql';
@@ -168,7 +170,9 @@ export default defineComponent({
 			if (row?.userType === 1) {
 				res = cardEllipsisOptions.filter(item => ['copy', 'del'].includes(item.key))
 			} else {
-				if (row.state === -2) {
+				if (row.state === 0) {
+					res = cardEllipsisOptions.filter(item => ['copy'].includes(item.key))
+				} else if (row.state === -2) {
 					res = cardEllipsisOptions.filter(item => ['copy', 'del'].includes(item.key))
 				}
 			}
@@ -224,7 +228,7 @@ export default defineComponent({
 		}
 		.card-box_mid {
 			width: 100%;
-			margin-top: 8px;
+			// margin-top: 8px;
 			display: flex;
 			.card-box-inner_left {
 				// flex: 1;

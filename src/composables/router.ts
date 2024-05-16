@@ -62,6 +62,15 @@ export function useRouterPush(inSetup = true) {
     routerPush({ name: routeName('login'), params: { module }, query });
   }
 
+	/**
+   * knowany页切换其他模块
+   * @param module - 切换后的其它模块
+   */
+		function toKnowAnyModule(module: UnionKey.knowanyModule) {
+			const { query } = route.value;
+			routerPush({ name: routeName('knowany'), params: { module }, query });
+		}
+
   /**
    * 登录成功后跳转重定向的地址
    */
@@ -80,6 +89,7 @@ export function useRouterPush(inSetup = true) {
     toHome,
     toLogin,
     toLoginModule,
-    toLoginRedirect
+    toLoginRedirect,
+		toKnowAnyModule
   };
 }

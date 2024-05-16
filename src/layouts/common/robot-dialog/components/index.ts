@@ -6,6 +6,7 @@ import ChatbotContentSettings from './chatbot-content-settings.vue';
 import ChatbotContentDefault from './chatbot-content-default.vue';
 import ChatbotContentCard from './chatbot-content-card.vue';
 import ChatbotContentRight from './chatbot-content-right.vue';
+import ChatbotContentCreate from './chatbot-content-create.vue';
 
 export {
 	ChatbotSider,
@@ -15,5 +16,6 @@ export {
 	ChatbotContentSettings,
 	ChatbotContentDefault,
 	ChatbotContentCard,
-	ChatbotContentRight
+	ChatbotContentRight,
+	ChatbotContentCreate
 }

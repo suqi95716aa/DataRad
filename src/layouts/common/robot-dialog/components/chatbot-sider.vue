@@ -3,7 +3,7 @@
 		<div class="chatbot-sider_top">
 			<div class="btn-item">
 				<n-button style="width: 100%" dashed :loading="addLoading" @click="addChatbotClick">
-					新建会话
+					开启新会话
 				</n-button>
 			</div>
 		</div>
@@ -17,7 +17,11 @@
 						:key="item.ScreenId"
 						@click.stop.prevent="itemClick(item)"
 					>
-						<n-icon><chatbox-icon /></n-icon>
+						<div class="pic-box">
+							<img v-if="item.ScreenType === 1" :src="picIcon1" alt="" />
+							<img v-if="item.ScreenType === 2" :src="picIcon2" alt="" />
+						</div>
+						<!-- <n-icon><chatbox-icon /></n-icon> -->
 						<div v-if="item.isEdit" class="inner-box pl-10" @click.stop.prevent>
 							<n-input
 								ref="inputRef"
@@ -130,6 +134,8 @@ import {
 	EllipsisVerticalOutline as EllipsisIcon,
 	CreateOutline as CreateIcon,
 } from "@vicons/ionicons5";
+import picIcon1 from '@/assets/images/data-wd.png';
+import picIcon2 from '@/assets/images/know-wd.png';
 import { ref, defineComponent, computed } from "vue";
 import { NIcon, NPopconfirm } from "naive-ui";
 import { useRobotStore } from "@/store";
@@ -183,9 +189,9 @@ export default defineComponent({
 
 		// 添加聊天窗口
 		const addChatbotClick = async () => {
-			robot.setShowSettings(true);
+			robot.setShowCreate(true);
 			robot.setChatbotId("");
-			EventBus.emit('init-chatbot-settings');
+			// EventBus.emit('init-chatbot-settings');
 		};
 
 		const saveClick = async (id: string = "", item: Robot.ChatbotItemType) => {
@@ -201,7 +207,8 @@ export default defineComponent({
 		const itemClick = (item: Robot.ChatbotItemType) => {
 			robot.setChatbotId(item.ScreenId);
 			EventBus.emit("back-bom");
-			robot.checkChatbotSettings();
+			robot.setShowCreate(false);
+			// robot.checkChatbotSettings();
 		};
 
 		return {
@@ -210,6 +217,8 @@ export default defineComponent({
 			addLoading,
 			chatbotList,
 			activeId,
+			picIcon1,
+			picIcon2,
 			getScreenName,
 			handleSelect,
 			addChatbotClick,
@@ -256,6 +265,22 @@ export default defineComponent({
 				&.active {
 					color: #40a9ff;
 					border: 1px solid #40a9ff;
+				}
+				.pic-box {
+					flex: 0 0 28px;
+					width: 28px;
+					height: 28px;
+					display: flex;
+					align-items: center;
+					justify-content: center;
+					border-radius: 50%;
+					overflow: hidden;
+					padding: 5px;
+					box-sizing: border-box;
+					img {
+						max-width: 100%;
+						max-height: 100%;
+					}
 				}
 				.n-icon {
 					vertical-align: middle;

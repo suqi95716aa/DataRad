@@ -259,7 +259,7 @@
 			</n-tabs>
 		</div>
 		<div class="footer-action">
-			<div v-if="!isNotConfig" class="f-btn mr-20">
+			<div class="f-btn mr-20">
 				<n-button
 					type="default"
 					block
@@ -365,7 +365,8 @@ export default defineComponent({
 			switch(tabIndex.value) {
 				case '1':
 					if (isNotConfig.value) {
-						res = '下一步'
+						// res = '下一步'
+						res = '开始会话'
 					}
 					break
 				case '2':
@@ -505,7 +506,6 @@ export default defineComponent({
 			let arr: string[] = childrenList.filter((item: any) => {
 				return item?.sheetName
 			}).map((item: any) => item.sheetName) || []
-
 
 			sheets.forEach((item: any) => {
 				item.disabled = arr.includes(item.value);

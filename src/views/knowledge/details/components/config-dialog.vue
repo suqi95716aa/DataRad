@@ -70,6 +70,7 @@
 								:show-file-list="false"
 								v-model:file-list="fileList"
 								@change="uploadChange"
+								@on-before-upload="onBeforeUpload"
 							>
 								<n-upload-dragger>
 									<div style="margin-bottom: 12px">
@@ -173,7 +174,7 @@
 									<span class="k-def-text" @click="formVal.splitHeadersType = '1'">恢复默认值</span>
 								</n-form-item>
 							</n-form>
-							<n-button type="info" :loading="addLoading" @click="previewsKClick">确定导入</n-button>
+							<n-button type="info" :loading="addLoading" @click="previewsKClick">预览</n-button>
 						</div>
 					</div>
 					<div class="tabs-main-right">
@@ -286,6 +287,7 @@ export default defineComponent({
 		});
 		const showPreview = ref(false);
 		const kType = ref(1); // 知识分割类型
+		const saveSuccess = ref(false);
 		const uploading = ref(false);
 		const addLoading = ref(false);
 		const saveLoading = ref(false);
@@ -378,6 +380,12 @@ export default defineComponent({
 			previewsInfo.value = {} as Knowledge.Previews;
 			showPreview.value = false;
 			fileListRef.value = [];
+			saveLoading.value = false;
+			addLoading.value = false;
+
+			if (!saveSuccess.value && fileInfo.value?.name) {
+				handleRemovePreviewsK()
+			}
 		}
 
 		let timer: any = null
@@ -438,8 +446,23 @@ export default defineComponent({
 			event?: Event;
 		}) => {
 			const file: any = options.file
+
+			const size = file.file.size
+
+			if (size > (1024 * 1024 * 5)) { // 5M
+				setTimeout(() => {
+					delFileClick(0)
+				}, 100)
+				message.warning('请上传5M以内的文件')
+				return false
+			}
+
 			confirmUploadFile(file.file)
 		};
+
+		const onBeforeUpload = (options: { file: UploadFileInfo, fileList: UploadFileInfo[] }) => {
+			console.log('onBeforeUpload-----options', options)
+		}
 
 		const countFileSize = (file: any) => {
 			if (!file) {
@@ -458,6 +481,18 @@ export default defineComponent({
 			fileListRef.value.splice(index, 1)
 			previewsInfo.value = {} as Knowledge.Previews
 			showPreview.value = false
+
+			if (fileInfo.value?.name) {
+				handleRemovePreviewsK()
+			}
+		}
+
+		const handleRemovePreviewsK = async () => {
+			const params = {
+				FileName: fileInfo.value?.name,
+			}
+
+			await knowledge.removePreviewsK(params)
 		}
 
 		const previewFileClick = (file: any) => {
@@ -500,7 +535,7 @@ export default defineComponent({
 							break
 						case 3:
 							Kconfig = {
-								split_headers_type: formVal.value.splitHeadersType * 1
+								split_headers_type: Number(formVal.value.splitHeadersType)
 							}
 							break
 						case 4:
@@ -522,7 +557,6 @@ export default defineComponent({
 					if (results) {
 						previewsInfo.value = results
 						showPreview.value = true
-						message.success('导入成功');
 					}
 				}
 			})
@@ -545,7 +579,7 @@ export default defineComponent({
 							break
 						case 3:
 							Kconfig = {
-								split_headers_type: formVal.value.splitHeadersType * 1
+								split_headers_type: Number(formVal.value.splitHeadersType)
 							}
 							break
 						case 4:
@@ -566,6 +600,7 @@ export default defineComponent({
 					saveLoading.value = false
 
 					if (results) {
+						saveSuccess.value = true
 						message.success('保存成功');
 						showModal.value = false;
 						ctx.emit('change')
@@ -646,6 +681,7 @@ export default defineComponent({
 			onHide,
 			onAfterLeaveDialog,
 			uploadChange,
+			onBeforeUpload,
 			countFileSize,
 			delFileClick,
 			previewFileClick,

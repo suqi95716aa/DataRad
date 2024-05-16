@@ -1,4 +1,4 @@
-import { getLoginModuleRegExp } from '@/utils';
+import { getLoginModuleRegExp, getKnowAnyModuleRegExp } from '@/utils';
 
 /** 根路由: / */
 export const ROOT_ROUTE: AuthRoute.Route = {
@@ -26,6 +26,22 @@ export const constantRoutes: AuthRoute.Route[] = [
     meta: {
       title: '登录',
       dynamicPath: `/login/:module(${getLoginModuleRegExp()})?`,
+      singleLayout: 'blank'
+    }
+  },
+	{
+    name: 'knowany',
+    path: '/knowany',
+    component: 'self',
+    props: route => {
+      const moduleType = (route.params.module as UnionKey.knowanyModule) || 'knowledge-base';
+      return {
+        module: moduleType
+      };
+    },
+    meta: {
+      title: '首页',
+      dynamicPath: `/knowany/:module(${getKnowAnyModuleRegExp()})?`,
       singleLayout: 'blank'
     }
   },

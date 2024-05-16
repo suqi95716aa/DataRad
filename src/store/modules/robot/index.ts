@@ -27,6 +27,7 @@ interface RobotState {
 	chatbotRecordId: string,
 	showBackBom: Boolean,
 	showSettings: Boolean,
+	showCreate: Boolean,
 	/** 展示右侧详情区域 */
 	showRightContent: Boolean,
 	/** 展示右侧详情内容类型 */
@@ -40,6 +41,7 @@ export const useRobotStore = defineStore("robot-store", {
 		chatbotRecords: getChatbotRecords(),
 		showBackBom: false,
 		showSettings: false,
+		showCreate: false, // 是否开启新会话
 		showRightContent: false,
 		chatbotRecordId: '',
 		chatbotRightContentType: 'chart'
@@ -107,32 +109,50 @@ export const useRobotStore = defineStore("robot-store", {
 		},
 		async addChatbot(data: Robot.UpdateChatbotItemType) {
 			const { userInfo } = useAuthStore()
-			let results
 			const formData = new FormData()
 			formData.append("Uid", userInfo.userId)
-			formData.append("ScreenName", data.ScreenName || "")
-			formData.append("ScreenDesc", data.ScreenDesc || "")
-			formData.append("ConfigId", data.ConfigId || "")
-			formData.append("ConfigName", data.ConfigName || "")
-			formData.append("GroupList", JSON.stringify(data.GroupList))
-			try {
-				results = await fetchAddScreen(formData)
-			} catch (error) {
-				console.log('error', error)
+			formData.append("ScreenName", data.ScreenName)
+			formData.append("ScreenDesc", data.ScreenDesc)
+			formData.append("ScreenType", data.ScreenType)
+
+			switch(data.ScreenType) {
+				case 1:
+					formData.append("ConfigId", data.ConfigId)
+					formData.append("ConfigName", data.ConfigName)
+					formData.append("GroupList", JSON.stringify(data.GroupList))
+					break
+				case 2:
+					formData.append("SimilarityThreshold", '0')
+					formData.append("RelevantHits", '4')
+					formData.append("KIDS", '[]')
+					break
 			}
 
-			if (!results) return
+			const results = await fetchAddScreen(formData)
+
+			if (results.error) return false
 
 			const resData: any = results.data
 
-			if (!resData) return
+			if (!resData) return false
 			resData.screenName = data.ScreenName
 
 			this.chatbotList = [resData, ...this.chatbotList];
 			this.chatbotId = resData.ScreenId;
+			const welcomeObj = {
+				id: nanoid(),
+				userType: 2, // 1 用户 2 机器人
+				value: "Hi，我是数据问答助手，你可以向我提出任何需要针对数据源查询的问题。但是提问之前请先前往配置中心完善配置信息哦~", // 输入的文本内容
+				type: 0,
+				datetime: moment().format('YYYY/MM/DD HH:mm:ss'), // 日期时间
+				state: 0,
+				loaded: true,
+				loading: false,
+				data: {} as Robot.ChatbotRecordDataType
+			};
 			this.chatbotRecords.push({
 				id: resData.ScreenId || "",
-				list: []
+				list: [welcomeObj]
 			})
 			localStg.set("chatbotList", this.chatbotList);
 			localStg.set("chatbotId", resData.ScreenId || "");
@@ -141,7 +161,6 @@ export const useRobotStore = defineStore("robot-store", {
 		async updateChatbot(id: string = "", data?: Robot.UpdateChatbotItemType, type: updateType = 'default') { // type default 更新所有 settings 更新settings
 			const { userInfo } = useAuthStore()
 			let chatbotList = toRaw(this.chatbotList)
-			let results
 			let chatbotItem = chatbotList.find(item => item.ScreenId === id) || {}
 			let settings = chatbotItem.settings || {}
 			let screenBasicConfig = settings.ScreenBasicConfig || {}
@@ -172,14 +191,12 @@ export const useRobotStore = defineStore("robot-store", {
 			formData.append("ScreenDesc", newScreenBasicConfig.ScreenDesc || "")
 			formData.append("ConfigId", newScreenQAConfig.ConfigId || "")
 			formData.append("ConfigName", newScreenQAConfig.ConfigName || "")
+			formData.append("ScreenType", chatbotItem.ScreenType)
 			formData.append("GroupList", JSON.stringify(newScreenQAConfig.GroupList) || "[]")
-			try {
-				results = await fetchUpdateScreen(formData)
-			} catch (error) {
-				console.log('error', error)
-			}
 
-			if (!results) return false
+			const results = await fetchUpdateScreen(formData)
+
+			if (results.error) return false
 
 			const resData = results.data
 
@@ -332,10 +349,13 @@ export const useRobotStore = defineStore("robot-store", {
 
 			EventBus.emit('chatbot-content-scroll-to', { type: 'bom', behavior: 'smooth' })
 
+			console.log('this.chatbotItem-----aaa', this.chatbotItem)
+
 			const formData = new FormData()
 			formData.append("UserId", userInfo.userId)
 			formData.append("ScreenId", this.chatbotId || "")
 			formData.append("Query", params.value || "")
+			formData.append("ScreenType", this.chatbotItem.ScreenType)
 			formData.append("ByGroup", "1")
 			try {
 				results = await fetchGetWdQuery(formData)
@@ -494,6 +514,9 @@ export const useRobotStore = defineStore("robot-store", {
 		},
 		setShowSettings(status: boolean) {
 			this.showSettings = status
+		},
+		setShowCreate(status: boolean) {
+			this.showCreate = status
 		}
 	}
 })

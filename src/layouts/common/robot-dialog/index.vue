@@ -74,6 +74,7 @@
 						</n-layout-footer>
 						<ChatbotContentDefault v-if="showWelcome" />
 						<ChatbotContentSettings v-if="showSettings" />
+						<ChatbotContentCreate v-if="showCreate" />
 					</n-layout>
 					<n-layout has-sider :style="rightWrapperStyle">
 						<n-layout-content v-if="showRightContent" :content-style="rightContentStyle">
@@ -112,7 +113,8 @@ import {
 	BackBom,
 	ChatbotContentSettings,
 	ChatbotContentDefault,
-	ChatbotContentRight
+	ChatbotContentRight,
+	ChatbotContentCreate
 } from "./components";
 
 const renderIcon = (icon: Component) => {
@@ -180,7 +182,8 @@ export default defineComponent({
 		BackBom,
 		ChatbotContentSettings,
 		ChatbotContentDefault,
-		ChatbotContentRight
+		ChatbotContentRight,
+		ChatbotContentCreate
 	},
 	setup() {
 		const title = ref("");
@@ -241,7 +244,7 @@ export default defineComponent({
 
 		const onAfterEnter = () => {
 			chatbotScrollTo('bom', 'auto')
-			robot.checkChatbotSettings()
+			// robot.checkChatbotSettings()
 			EventBus.on('chatbot-content-scroll-to', (res: any) => {
 				chatbotScrollTo(res?.type, res?.behavior)
 			})
@@ -305,6 +308,7 @@ export default defineComponent({
 			contentInnerRef,
 			cardEllipsisOptions,
 			showSettings: computed(() => robot.showSettings),
+			showCreate: computed(() => robot.showCreate),
 			showWelcome,
 			showRightContent,
 			onAfterEnter,

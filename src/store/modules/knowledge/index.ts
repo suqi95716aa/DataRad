@@ -8,6 +8,7 @@ import {
 	fetchAddKnowledge,
 	fetchDeleteKnowledge,
 	fetchPreviewsKnowledge,
+	fetchPreviewsRemoveKnowledge,
 	fetchGetKnowledge
 } from "@/service";
 import { useAuthStore } from "../auth";
@@ -47,6 +48,7 @@ export const useKnowledgeStore = defineStore("knowledge-store", {
 			formData.append("KBColor", params.KBColor);
 			formData.append("KBBGImg", params.KBBGImg);
 			formData.append("Uid", userInfo.userId);
+
 			const results = await fetchAddKnowledgeBase(formData);
 
 			if (results.error) return false;
@@ -58,7 +60,6 @@ export const useKnowledgeStore = defineStore("knowledge-store", {
 		},
 		// 更新知识库
 		async updateKB(params: any) {
-			console.log("params----", params);
 			const { userInfo } = useAuthStore();
 			const formData = new FormData();
 			formData.append("KBID", params.KBID);
@@ -122,6 +123,17 @@ export const useKnowledgeStore = defineStore("knowledge-store", {
 
 			return resObj
 		},
+		async removePreviewsK(params: any) {
+			const { userInfo } = useAuthStore();
+			const formData = new FormData();
+			formData.append("Uid", userInfo.userId);
+			formData.append("FileName", params.FileName);
+			const results = await fetchPreviewsRemoveKnowledge(formData);
+
+			if (results.error) return false;
+
+			return true;
+		},
 		// 添加知识
 		async addK(params: any) {
 			const { userInfo } = useAuthStore();
@@ -138,6 +150,9 @@ export const useKnowledgeStore = defineStore("knowledge-store", {
 			this.knowledgeBaseList.forEach(item => {
 				if (item.KBID === params.KBID) {
 					const obj = results.data as Knowledge.K
+					if (!item.data) {
+						item.data = []
+					}
 					item.data.unshift(obj)
 				}
 			})

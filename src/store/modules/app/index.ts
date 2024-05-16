@@ -104,10 +104,6 @@ export const useAppStore = defineStore('app-store', {
     },
 		/** 打开聊天弹框 */
 		openRobotDialog() {
-			const robot = useRobotStore();
-			if (!robot.chatbotId) {
-				robot.setShowSettings(false);
-			}
 			this.robotDialogVisible = true;
 		},
 		/** 关闭聊天弹框 */

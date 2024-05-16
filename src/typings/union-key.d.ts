@@ -9,6 +9,12 @@ declare namespace UnionKey {
    */
   type LayoutComponentType = 'basic' | 'blank';
 
+	/**
+	 * 首页模块
+	 *
+	 */
+	type knowanyModule = 'knowany' | 'data-source' | 'knowledge-base';
+
   /**
    * 登录模块
    * - pwd-login: 账密登录

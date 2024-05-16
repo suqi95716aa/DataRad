@@ -6,6 +6,12 @@ export const loginModuleLabels: Record<UnionKey.LoginModule, string> = {
   'bind-wechat': '微信绑定'
 };
 
+export const knowanyModuleLabels: Record<UnionKey.knowanyModule, string> = {
+	'knowany': '首页',
+  'data-source': '数据源',
+  'knowledge-base': '知识库'
+};
+
 export const userRoleLabels: Record<Auth.RoleType, string> = {
   super: '超级管理员',
   admin: '管理员',
