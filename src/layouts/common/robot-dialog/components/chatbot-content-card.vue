@@ -18,7 +18,11 @@
 				<span class="datetime">{{ item.datetime }}</span>
 			</div> -->
 			<div class="card-box_mid">
-				<div class="card-box-inner_left" :class="{'flex-fill': item.isTipsReply}">
+				<div
+					class="card-box-inner_left"
+					:class="{'flex-fill': item.isTipsReply}"
+					:style="{'margin-left': item.userType === 1 ? '42px' : '0', 'margin-right': item.userType === 2 ? '42px' : '0'}"
+					>
 					<ChatCardLoading v-if="item.loading" />
 					<ChatCardError v-if="item.loaded && !item.loading && item.error" />
 					<div
@@ -29,6 +33,17 @@
 						<div v-if="item.userType === 1" class="results-content">
 							<div class="success-results">
 								<UserReply :value="item.value"/>
+								<div class="action-box">
+									<div class="action-box-left"></div>
+									<div class="action-box-right">
+										<div class="action-box-item" @click="handleSelect('copy', item)">
+											<n-icon class="evs-icon" size="12" style="margin-right: 4px;">
+												<CopyIcon />
+											</n-icon>
+											<span>复制</span>
+										</div>
+									</div>
+								</div>
 							</div>
 						</div>
 						<!-- 机器人回复 -->
@@ -40,7 +55,7 @@
 								<RobotReply :success="true" :type="item.replyType"/>
 								<div class="action-box">
 									<div class="action-box-left">
-										<div class="action-box-item">
+										<div class="action-box-item" @click="handleSelect('copy', item)">
 											<n-icon class="evs-icon" size="12" style="margin-right: 4px;">
 												<CopyIcon />
 											</n-icon>
@@ -52,6 +67,7 @@
 							<div v-else class="success-results">
 								<ChatCardChart :card-data="item" />
 								<div v-if="item?.data?.spss_reasoning" class="reasoning">
+									<n-divider style="margin-top: 8px;margin-bottom: 24px;" />
 									<p>{{ item?.data?.spss_reasoning }}</p>
 								</div>
 								<div class="action-box">
@@ -267,7 +283,7 @@ export default defineComponent({
 		flex: 1;
 		display: flex;
 		flex-direction: column;
-		// overflow: hidden;
+		overflow: hidden;
 
 		.card-box_top {
 			&.t-r {
@@ -284,11 +300,11 @@ export default defineComponent({
 			display: flex;
 			.card-box-inner_left {
 				// flex: 1;
-				// overflow: hidden;
+				overflow: hidden;
 				&.flex-fill {
 					flex: 1;
 					// overflow: hidden;
-					margin-right: 42px;
+					// margin-right: 42px;
 				}
 				.results {
 					white-space: pre-wrap;
@@ -302,7 +318,9 @@ export default defineComponent({
 							background-color: #f4f6f8;
 							border-radius: 4px;
 							.reasoning {
-								margin-top: 10px;
+								padding: 8px 12px;
+								background-color: #fff;
+								// margin-top: 10px;
 							}
 						}
 						.error-results {
