@@ -3,7 +3,7 @@ import { nanoid } from "nanoid";
 import moment from 'moment';
 import { getChatbotList, getActiveChatbotId, getChatbotRecords } from "./helpers";
 import { localStg } from "@/utils";
-import { fetchGetScreenList, fetchAddScreen, fetchDeleteScreen, fetchUpdateScreen, fetchGetWdQuery } from "@/service";
+import { fetchGetScreenList, fetchAddScreen, fetchDeleteScreen, fetchUpdateScreen, fetchGetDhQuery } from "@/service";
 import { useAuthStore } from '../auth';
 import { toRaw } from 'vue';
 import { EventBus } from '@/utils';
@@ -142,13 +142,15 @@ export const useRobotStore = defineStore("robot-store", {
 			const welcomeObj = {
 				id: nanoid(),
 				userType: 2, // 1 用户 2 机器人
-				value: "Hi，我是数据问答助手，你可以向我提出任何需要针对数据源查询的问题。但是提问之前请先前往配置中心完善配置信息哦~", // 输入的文本内容
-				type: 0,
+				value: "", // 输入的文本内容
 				datetime: moment().format('YYYY/MM/DD HH:mm:ss'), // 日期时间
-				state: 0,
+				isWelcome: true,
+				replyType: 0,
+				state: 1,
+				type: 0,
 				loaded: true,
 				loading: false,
-				data: {} as Robot.ChatbotRecordDataType
+				data: {} as Robot.RecordData
 			};
 			this.chatbotRecords.push({
 				id: resData.ScreenId || "",
@@ -157,6 +159,8 @@ export const useRobotStore = defineStore("robot-store", {
 			localStg.set("chatbotList", this.chatbotList);
 			localStg.set("chatbotId", resData.ScreenId || "");
 			localStg.set("chatbotRecords", this.chatbotRecords);
+
+			return true;
 		},
 		async updateChatbot(id: string = "", data?: Robot.UpdateChatbotItemType, type: updateType = 'default') { // type default 更新所有 settings 更新settings
 			const { userInfo } = useAuthStore()
@@ -213,21 +217,13 @@ export const useRobotStore = defineStore("robot-store", {
 		},
 		async delChatbot(id: string = "") {
 			const { userInfo } = useAuthStore()
-			let results
 			const formData = new FormData()
 			formData.append("Uid", userInfo.userId)
 			formData.append("ScreenId", id)
-			try {
-				results = await fetchDeleteScreen(formData)
-			} catch (error) {
-				console.log('error', error)
-			}
 
-			if (!results) return
+			const results = await fetchDeleteScreen(formData)
 
-			const data: any = results.data || {}
-
-			if (!data.isDel) return window.$message?.error("删除失败")
+			if (results.error) return false
 
 			const fIndex = this.chatbotList.findIndex(item => item.ScreenId === id)
 			const len = this.chatbotList.length
@@ -255,7 +251,8 @@ export const useRobotStore = defineStore("robot-store", {
 				}
 				localStg.set("chatbotList", this.chatbotList);
 				localStg.set("chatbotRecords", this.chatbotRecords);
-				this.checkChatbotSettings();
+
+				return true;
 			}
 		},
 		setChatbotId(id: string = "") {
@@ -269,10 +266,11 @@ export const useRobotStore = defineStore("robot-store", {
 				value: params.value, // 输入的文本内容
 				type: 1, // 1 文本
 				datetime: moment().format('YYYY/MM/DD HH:mm:ss'), // 日期时间
-				state: -2, // 状态
+				isTipsReply: false,
+				state: 1, // 状态
 				loaded: true,
 				loading: false,
-				data: {} as Robot.ChatbotRecordDataType
+				data: {} as Robot.RecordData
 			};
 			this.chatbotRecords.forEach(item => {
 				if (item.id === this.chatbotId) {
@@ -286,7 +284,6 @@ export const useRobotStore = defineStore("robot-store", {
 		/* 添加一条聊天记录*/
 		async addChatbotRecord(params: RecordParamsType) {
 			const { userInfo } = useAuthStore()
-			let results
 			const id1 = nanoid();
 			const id2 = nanoid();
 			const datetime = moment().format('YYYY/MM/DD HH:mm:ss');
@@ -298,7 +295,8 @@ export const useRobotStore = defineStore("robot-store", {
 				datetime, // 日期时间
 				state: 1, // 状态
 				loaded: true,
-				data: {} as Robot.ChatbotRecordDataType
+				loading: false,
+				data: {} as Robot.RecordData
 			};
 			const obj2 = {
 				id: id2,
@@ -309,7 +307,7 @@ export const useRobotStore = defineStore("robot-store", {
 				state: 1, // 状态
 				loaded: false,
 				loading: true,
-				data: {} as Robot.ChatbotRecordDataType
+				data: {} as Robot.RecordData
 			};
 
 			const fIndex = this.chatbotRecords.findIndex((item) => item.id === this.chatbotId)
@@ -322,20 +320,6 @@ export const useRobotStore = defineStore("robot-store", {
 			const recordObj = this.chatbotRecords.find((item: Robot.ChatbotRecordsType) => item.id === this.chatbotId)
 
 			recordObj?.list.push(obj1, obj2)
-			// this.chatbotList = this.chatbotList.map((item) => {
-			// 	if (item.ScreenId === this.chatbotId) {
-			// 		let records = item.records || []
-			// 		item.records = [...records, obj1, obj2]
-			// 	}
-			// 	return item
-			// })
-
-			// let records: Robot.ChatbotRecordType[] = []
-			// this.chatbotList.forEach((item) => {
-			// 	if (item.ScreenId === this.chatbotId) {
-			// 		records = item.records as Robot.ChatbotRecordType[]
-			// 	}
-			// })
 
 			let record1: Robot.ChatbotRecordType = {} as Robot.ChatbotRecordType
 			let record2: Robot.ChatbotRecordType = {} as Robot.ChatbotRecordType
@@ -349,66 +333,53 @@ export const useRobotStore = defineStore("robot-store", {
 
 			EventBus.emit('chatbot-content-scroll-to', { type: 'bom', behavior: 'smooth' })
 
-			console.log('this.chatbotItem-----aaa', this.chatbotItem)
-
 			const formData = new FormData()
 			formData.append("UserId", userInfo.userId)
-			formData.append("ScreenId", this.chatbotId || "")
-			formData.append("Query", params.value || "")
+			formData.append("ScreenId", this.chatbotId + '')
+			formData.append("Query", params.value)
 			formData.append("ScreenType", this.chatbotItem.ScreenType)
 			formData.append("ByGroup", "1")
-			try {
-				results = await fetchGetWdQuery(formData)
-			} catch (err) {
-				console.log('error', err)
-				record2.state = -2;
-				record2.value = "";
-			} finally {
-				record2.loading = false;
-				record2.loaded = true;
-			}
 
-			if (!results) {
-				record2.state = -2;
-				record2.value = "";
-				localStg.set("chatbotList", this.chatbotList);
+			const results = await fetchGetDhQuery(formData)
+
+			record2.loading = false;
+			record2.loaded = true;
+
+			if (results.error) {
+				const code = results.error.code
+				record2.replyType = 1
+				if (code === 400) {
+					record2.replyType = 2
+				}
+				record2.isTipsReply = true
+				localStg.set("chatbotRecords", this.chatbotRecords);
 				return false;
 			}
 
-			const resData = results.data as Robot.ChatbotRecordDataType
-			const resError = results.error
-
-			if (resError && resError.code === 400) {
-				record2.type = 2;
-				record2.state = -2;
-				record2.value = "";
+			if (!results.data) {
+				record2.isTipsReply = true
+				record2.replyType = 2
 				localStg.set("chatbotRecords", this.chatbotRecords);
-				return false
+				return false;
 			}
 
-			if (!resData) {
-				record2.type = 1;
-				record2.state = -2;
-				record2.value = "";
-				localStg.set("chatbotRecords", this.chatbotRecords);
-				return false
-			}
+			const resData = results.data as Robot.RecordData
 
 			const sourceData = resData?.sourceData || []
 			const sourceType = resData?.sourceType || {}
 
-			record2.type = 2;
+			if (sourceData.length === 0) {
+				record2.replyType = 1
+				record2.isTipsReply = true
+				localStg.set("chatbotRecords", this.chatbotRecords);
+				return false;
+			}
+
 			record2.data = {
 				sourceData,
 				sourceType,
 				sql: resData?.sql || '',
 				spss_reasoning: resData?.spss_reasoning || ''
-			}
-
-			if (sourceData.length === 0) {
-				record2.type = 1;
-				record2.state = -2;
-				record2.value = "";
 			}
 
 			localStg.set("chatbotRecords", this.chatbotRecords);

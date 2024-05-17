@@ -234,6 +234,7 @@ export default defineComponent({
 	height: 100%;
 	display: flex;
 	flex-direction: column;
+	// background-color: #f5f5f6;
 	.chatbot-sider_top {
 		border-bottom: 1px solid var(--n-border-color);
 		.btn-item {

@@ -93,6 +93,7 @@ export default defineComponent({
 			const results = await robot.addChatbot(params);
 			loading.value = false;
 
+			console.log('results----aaa', results)
 			if (results) {
 				robot.setShowCreate(false);
 			}

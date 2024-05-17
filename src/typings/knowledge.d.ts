@@ -39,6 +39,7 @@ declare namespace Knowledge {
 		text: string;
 		sequence: number;
 	}
+
 	interface KDetails {
 		total: number;
 		chunks_info: Chunks_info[];

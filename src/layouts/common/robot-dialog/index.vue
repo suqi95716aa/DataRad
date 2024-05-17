@@ -55,7 +55,7 @@
 					<n-layout has-sider>
 						<n-layout-content
 							ref="contentRef"
-							content-style="padding: 0; height: calc(100% - 72px);"
+							content-style="padding: 0; height: calc(100% - 60px);"
 							:native-scrollbar="true"
 							:on-scroll="onContentScroll"
 						>
@@ -68,7 +68,7 @@
 						</n-layout-content>
 						<n-layout-footer
 							position="absolute"
-							style="padding: 0; background-color: var(--baseColor);"
+							style="padding: 0; background-color: #f5f5f6;"
 						>
 							<ChatbotFooter />
 						</n-layout-footer>
@@ -333,10 +333,12 @@ export default defineComponent({
 	display: flex;
 	flex-direction: column;
 	align-items: center;
+	background-color: #f5f5f6;
 	.chatbot-main_wrapper {
 		position: relative;
 		width: 100%;
 		flex: 1;
+		background-color: #f5f5f6;
 		// overflow: hidden;
 		.chatbot-main_content {
 			height: 100%;

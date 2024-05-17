@@ -18,27 +18,69 @@
 				<span class="datetime">{{ item.datetime }}</span>
 			</div> -->
 			<div class="card-box_mid">
-				<div class="card-box-inner_left" :class="{'flex-fill': item.state === -2}">
+				<div class="card-box-inner_left" :class="{'flex-fill': item.isTipsReply}">
 					<ChatCardLoading v-if="item.loading" />
 					<ChatCardError v-if="item.loaded && !item.loading && item.error" />
 					<div
 						v-if="item.loaded && !item.loading && !item.error"
 						class="results"
 					>
-						<div v-if="item.state === 0" class="success-results">
-							<RobotReply :success="true" :type="item.type"/>
-						</div>
-						<div v-else-if="item.state === 1" class="success-results">
-							<p v-if="item.type === 1" class="c-text">{{ item.value }}</p>
-							<ChatCardChart :card-data="item" v-else-if="item.type === 2" />
-							<div v-if="item?.data?.spss_reasoning" class="reasoning">
-								<p>{{ item?.data?.spss_reasoning }}</p>
+						<!-- 用户提问 -->
+						<div v-if="item.userType === 1" class="results-content">
+							<div class="success-results">
+								<UserReply :value="item.value"/>
 							</div>
 						</div>
-						<div v-else-if="item.state === -2" class="error-results">
-							<RobotReply :type="item.type"/>
+						<!-- 机器人回复 -->
+						<div v-if="item.userType === 2" class="results-content">
+							<div v-if="item.isWelcome" class="success-results">
+								<RobotReply :success="true" :type="item.replyType"/>
+							</div>
+							<div v-else-if="item.isTipsReply" class="error-results">
+								<RobotReply :success="true" :type="item.replyType"/>
+								<div class="action-box">
+									<div class="action-box-left">
+										<div class="action-box-item">
+											<n-icon class="evs-icon" size="12" style="margin-right: 4px;">
+												<CopyIcon />
+											</n-icon>
+											<span>复制</span>
+										</div>
+									</div>
+								</div>
+							</div>
+							<div v-else class="success-results">
+								<ChatCardChart :card-data="item" />
+								<div v-if="item?.data?.spss_reasoning" class="reasoning">
+									<p>{{ item?.data?.spss_reasoning }}</p>
+								</div>
+								<div class="action-box">
+									<div class="action-box-left">
+										<div class="action-box-item" @click="handleSelect('copy', item)">
+											<n-icon class="evs-icon" size="12" style="margin-right: 4px;">
+												<CopyIcon />
+											</n-icon>
+											<span>复制</span>
+										</div>
+									</div>
+									<div class="action-box-right">
+										<div class="action-box-item mr-6px" @click="handleSelect('sql', item)">
+											<n-icon class="evs-icon" size="12" style="margin-right: 4px;">
+												<SqlIcon />
+											</n-icon>
+											<span>SQL查询</span>
+										</div>
+										<div class="action-box-item" @click="handleSelect('chart', item)">
+											<n-icon class="evs-icon" size="12" style="margin-right: 4px;">
+												<KshIcon />
+											</n-icon>
+											<span>数据可视化</span>
+										</div>
+									</div>
+								</div>
+							</div>
 						</div>
-						<!-- <div v-if="item.type === 2" class="action-footer">
+						<!-- <div class="action-footer">
 							<n-button text>
 								<template #icon>
 									<n-icon>
@@ -50,7 +92,7 @@
 						</div> -->
 					</div>
 				</div>
-				<div class="card-box-inner_right" :class="{'flex-justify-end': item.userType === 1}">
+				<!-- <div class="card-box-inner_right" :class="{'flex-justify-end': item.userType === 1}">
 					<n-dropdown
 						:options="getDropdownOpts(item)"
 						size="small"
@@ -62,7 +104,7 @@
 							<EllipsisVerticalSharpIcon />
 						</n-icon>
 					</n-dropdown>
-				</div>
+				</div> -->
 			</div>
 		</div>
 	</div>
@@ -77,6 +119,7 @@ import {
 } from "@vicons/ionicons5";
 import SvgIcon from '@/components/custom/svg-icon.vue';
 import RobotReply from './robot-reply/index.vue';
+import UserReply from './user-reply/index.vue';
 import type { Component } from "vue";
 import { NIcon } from "naive-ui";
 import { h, defineComponent } from "vue";
@@ -121,12 +164,20 @@ const cardEllipsisOptions = [
 
 export default defineComponent({
 	components: {
+		CopyIcon,
 		EllipsisVerticalSharpIcon,
 		ChatCardLoading,
 		ChatCardError,
 		ChatCardChart,
 		ReloadIcon,
-		RobotReply
+		RobotReply,
+		UserReply,
+		KshIcon: () => {
+			return h(SvgIcon, { localIcon: 'ksh' })
+		},
+		SqlIcon: () => {
+			return h(SvgIcon, { localIcon: 'sql' })
+		},
 	},
 	props: {
 		item: {
@@ -216,7 +267,8 @@ export default defineComponent({
 		flex: 1;
 		display: flex;
 		flex-direction: column;
-		overflow: hidden;
+		// overflow: hidden;
+
 		.card-box_top {
 			&.t-r {
 				text-align: right;
@@ -232,56 +284,40 @@ export default defineComponent({
 			display: flex;
 			.card-box-inner_left {
 				// flex: 1;
-				overflow: hidden;
+				// overflow: hidden;
 				&.flex-fill {
 					flex: 1;
-					overflow: hidden;
-				}
-				.loading-box {
-					padding: 8px 12px;
-					background-color: #f4f6f8;
-					border-radius: 4px;
-					display: flex;
-					align-items: center;
-					.ml-8 {
-						margin-left: 8px;
-					}
+					// overflow: hidden;
+					margin-right: 42px;
 				}
 				.results {
 					white-space: pre-wrap;
-					.w-max-300 {
-						max-width: 300px;
-					}
 
-					.w-max-360 {
-						max-width: 360px;
-					}
+					.results-content {
+						position: relative;
 
-					.w-max-80b {
-						max-width: 80%;
-					}
-
-					.success-results {
-						flex: initial;
-						padding: 12px;
-						background-color: #f4f6f8;
-						border-radius: 4px;
-						.reasoning {
-							margin-top: 10px;
-						}
-					}
-					.error-results {
-						.error-text {
-							width: 100%;
-							padding: 8px 12px;
+						.success-results {
+							flex: initial;
+							// padding: 12px;
+							background-color: #f4f6f8;
 							border-radius: 4px;
-							background-color: rgb(253, 237, 237);
-							color: rgb(95, 33, 32);
+							.reasoning {
+								margin-top: 10px;
+							}
 						}
-						.a-link {
-							color: #1890ff;
-							text-decoration: underline;
-							margin: 0 2px;
+						.error-results {
+							.error-text {
+								width: 100%;
+								padding: 8px 12px;
+								border-radius: 4px;
+								background-color: rgb(253, 237, 237);
+								color: rgb(95, 33, 32);
+							}
+							.a-link {
+								color: #1890ff;
+								text-decoration: underline;
+								margin: 0 2px;
+							}
 						}
 					}
 					.action-footer {
@@ -289,6 +325,43 @@ export default defineComponent({
 						display: flex;
 						align-items: center;
 						margin-top: 8px;
+					}
+					.action-box {
+						display: flex;
+						padding: 8px 12px;
+						background-color: #fff;
+						border-radius: 2px;
+						box-sizing: border-box;
+						.action-box-left {
+							flex: 1;
+							display: flex;
+							align-items: center;
+						}
+						.mr-10 {
+							margin-right: 10px;
+						}
+						.action-box-right {
+							display: flex;
+						}
+						.action-box-item {
+							display: flex;
+							align-items: center;
+							font-size: 12px;
+							font-family: "PingFang SC", "Microsoft YaHei", SimHei;
+							font-weight: 400;
+							color: #8f8f8f;
+							border-radius: 2px;
+							padding: 2px 4px;
+							box-sizing: border-box;
+							cursor: pointer;
+							span {
+								line-height: 20px;
+							}
+							&:hover {
+								background-color: #f3f5fc;
+								color: #000;
+							}
+						}
 					}
 				}
 			}

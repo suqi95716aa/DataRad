@@ -113,11 +113,9 @@ export default defineComponent({
 			sendValue.value = "";
 
 			sendLoading.value = true;
-
 			await robot.addChatbotRecord({
 				value
 			});
-
 			sendLoading.value = false;
 
 			EventBus.emit('chatbot-content-scroll-to', { type: 'bom', behavior: 'smooth' })
@@ -152,6 +150,7 @@ export default defineComponent({
 	padding: 16px 16px 8px;
 	box-sizing: border-box;
 	display: flex;
+	background-color: #f5f5f6;
 	.middle-box {
 		flex: 1;
 		overflow: hidden;

@@ -8,7 +8,7 @@
 						<icon-local-reload />
 					</n-icon>
 				</template>
-				<span>重新加载</span>
+				<span>再试一次</span>
 			</n-popover>
 		</div>
 	</div>
@@ -26,6 +26,9 @@ export default defineComponent({
 
 <style lang="scss" scoped>
 .error-box {
+	padding: 8px 12px;
+	border-radius: 4px;
+	background-color: #fff;
 	.ml-8 {
 		margin-left: 8px;
 	}

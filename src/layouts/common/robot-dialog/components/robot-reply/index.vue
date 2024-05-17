@@ -1,7 +1,7 @@
 <template>
 	<div class="robot-reply" :class="{'reply-error': !success}">
 		<p v-if="type === 0" class="robot-reply-box">
-			<span>Hi，我是数据问答助手，你可以向我提出任何需要针对数据源查询的问题。但是提问之前请先前往<a class="a-link" href="javascript:;" @click="addClick">配置中心</a>。完善配置信息哦~</span>
+			<span>Hi，我是数据问答助手~<br />你可以向我提出任何需要针对数据源查询的问题~<br />提问之前请先前往<a class="a-link" href="javascript:;" @click="addClick">配置中心</a>，完善配置信息哦~</span>
 		</p>
 		<p v-if="type === 1" class="robot-reply-box">
 			<span>您当前的问题未查询成功，一般是由于问题描述的清晰度引起的。请修改您的问题后再次尝试，<br />或者点击这里</span>
@@ -21,7 +21,7 @@ import { EventBus } from "@/utils";
 
 export default defineComponent({
 	props: {
-		// 1 默认错误提示 2 数据源被删除错误提示
+		// 0 默认问候语 1 默认错误提示 2 数据源被删除错误提示
 		type: Number,
 		success: Boolean
 	},
@@ -46,7 +46,7 @@ export default defineComponent({
 	width: 100%;
 	padding: 8px 12px;
 	border-radius: 4px;
-	background-color: #f4f6f8;
+	background-color: #fff;
 	&.reply-error {
 		background-color: rgb(253, 237, 237);
 		color: rgb(95, 33, 32);

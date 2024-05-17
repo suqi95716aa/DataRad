@@ -190,7 +190,7 @@ export default defineComponent({
 .chatbot-content {
 	position: relative;
 	margin: 0 auto;
-	max-width: 1048px;
+	max-width: 800px;
 	height: 100%;
 	padding: 16px;
 	box-sizing: border-box;

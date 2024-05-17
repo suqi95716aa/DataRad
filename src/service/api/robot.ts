@@ -17,7 +17,12 @@ export function fetchUpdateScreen(data: FormData) {
 	return request.post(`${baseURL}/screen/update`, data)
 }
 
-/* 问答 */
-export function fetchGetWdQuery(data: FormData) {
-	return request.post(`${baseURL}/query`, data)
+/* 数据助手问答 */
+export function fetchGetDhQuery(data: FormData) {
+	return request.post(`${baseURL}/dh/query`, data)
+}
+
+/* 知识助手问答 */
+export function fetchGetKbqaQuery(data: FormData) {
+	return request.post(`${baseURL}/kbqa/query`, data)
 }

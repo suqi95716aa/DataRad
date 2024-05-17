@@ -19,6 +19,9 @@ export default defineComponent({
 .loading-box {
 	display: flex;
 	align-items: center;
+	padding: 8px 12px;
+	border-radius: 4px;
+	background-color: #fff;
 	.ml-8 {
 		margin-left: 8px;
 	}

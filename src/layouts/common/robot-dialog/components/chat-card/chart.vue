@@ -55,8 +55,9 @@
 			<ChatCardMoreDialog :row-data="$props.cardData" :active="active" ref="moreRef" />
 		</div> -->
 	</div>
-	<div v-else>
-		<span>暂无数据</span>
+	<div v-else class="empty-box">
+		<span>您当前的问题未查询成功，一般是由于问题描述的清晰度引起的。请修改您的问题后再次尝试，<br />或者点击这里</span>
+		<a class="a-link" href="javascript:;">查看常见的问答使用手册和帮助</a>。
 	</div>
 </template>
 
@@ -355,10 +356,12 @@ export default defineComponent({
 	// min-width: 350px;
 	// max-width: 908px;
 	width: 100%;
-	height: 300px;
-	background-color: var(--baseColor);
+	min-height: 300px;
 	display: flex;
 	flex-direction: column;
+	padding: 8px 12px;
+	border-radius: 4px;
+	background-color: #fff;
 	.chart-content {
 		width: 100%;
 		flex: 1;
@@ -398,6 +401,16 @@ export default defineComponent({
 		.chart-footer-right {
 
 		}
+	}
+}
+.empty-box {
+	padding: 8px 12px;
+	border-radius: 4px;
+	background-color: #fff;
+	.a-link {
+		color: #1890ff;
+		text-decoration: underline;
+		margin: 0 2px;
 	}
 }
 </style>
