@@ -378,8 +378,6 @@ export default defineComponent({
 			return res
 		})
 
-		const
-
 		onMounted(() => {
 			setChatbotSettings(2);
 			EventBus.on("init-chatbot-settings", () => {
