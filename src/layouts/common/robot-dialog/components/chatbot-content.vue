@@ -107,7 +107,7 @@ export default defineComponent({
 
 		const records = computed(() => {
 			const fIndex = robot.chatbotRecords.findIndex((item) => item.id === robot.chatbotId)
-			let res = [] as Robot.ChatbotRecordType[]
+			let res = [] as Robot.Record[]
 			if (fIndex !== -1) {
 				res = robot.chatbotRecords[fIndex].list
 			}

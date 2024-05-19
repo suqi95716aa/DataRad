@@ -8,7 +8,7 @@
 			<a class="a-link" href="javascript:;">查看常见的问答使用手册和帮助</a>。
 		</p>
 		<p v-if="type === 2" class="robot-reply-box">
-			<span>您当前的数据源好像被删除了哦！请点击这里重新</span>
+			<span>您当前好像还没有添加数据源哦！请点击这里进行</span>
 			<a class="a-link" href="javascript:;" @click="addClick">添加数据源</a>。
 		</p>
 	</div>

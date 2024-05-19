@@ -33,7 +33,7 @@
 						<div v-if="item.userType === 1" class="results-content">
 							<div class="success-results">
 								<UserReply :value="item.value"/>
-								<div class="action-box">
+								<!-- <div class="action-box">
 									<div class="action-box-left"></div>
 									<div class="action-box-right">
 										<div class="action-box-item" @click="handleSelect('copy', item)">
@@ -43,7 +43,7 @@
 											<span>复制</span>
 										</div>
 									</div>
-								</div>
+								</div> -->
 							</div>
 						</div>
 						<!-- 机器人回复 -->

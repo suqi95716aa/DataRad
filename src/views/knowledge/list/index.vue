@@ -58,7 +58,7 @@
 									</template>
 								</n-ellipsis>
 								<p class="font-num">
-									<span>{{ 0 }} 知识</span>
+									<span>{{ item.data ? item.data.length : 0 }} 知识</span>
 									<n-divider vertical />
 									<span>{{ item.KBCreateTime }}</span>
 								</p>

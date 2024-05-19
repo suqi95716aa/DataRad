@@ -31,6 +31,21 @@
 				@click="isFull = true"
 			/>
 		</template> -->
+		<template #header>
+			<div class="chatbot-header">
+				<div class="logo-box">
+					<h2 class="pl-8px text-24px font-bold text-primary transition duration-300 ease-in-out">know<span class="text-28px">A</span>ny</h2>
+				</div>
+				<div v-if="configName" class="data-title">
+					<p>数据源：</p>
+					<img class="mr-8px" src="@/assets/images/xlsx.png" alt="" />
+					<p class="file-name">{{ configName }}</p>
+				</div>
+			</div>
+		</template>
+		<template #close>
+			<span>hello</span>
+		</template>
 		<div class="chatbot">
 			<n-layout style="height: 100%">
 				<!-- <n-layout-header style="height: 64px; padding: 24px" bordered>
@@ -48,6 +63,7 @@
 						content-style="height: 100%; padding: 0;"
 						trigger-style="width: 32px;height: 32px"
 						collapsed-trigger-style="width: 32px;height: 32px"
+						content-class="robot-sider-content"
 						:on-update:collapsed="collapsedChange"
 					>
 						<ChatbotSider />
@@ -72,7 +88,7 @@
 						>
 							<ChatbotFooter />
 						</n-layout-footer>
-						<ChatbotContentDefault v-if="showWelcome" />
+						<ChatbotContentWelcome v-if="showWelcome" />
 						<ChatbotContentSettings v-if="showSettings" />
 						<ChatbotContentCreate v-if="showCreate" />
 					</n-layout>
@@ -112,7 +128,7 @@ import {
 	ChatbotFooter,
 	BackBom,
 	ChatbotContentSettings,
-	ChatbotContentDefault,
+	ChatbotContentWelcome,
 	ChatbotContentRight,
 	ChatbotContentCreate
 } from "./components";
@@ -181,7 +197,7 @@ export default defineComponent({
 		ChatbotFooter,
 		BackBom,
 		ChatbotContentSettings,
-		ChatbotContentDefault,
+		ChatbotContentWelcome,
 		ChatbotContentRight,
 		ChatbotContentCreate
 	},
@@ -199,11 +215,17 @@ export default defineComponent({
 
 		const records = computed(() => {
 			const fIndex = robot.chatbotRecords.findIndex((item) => item.id === robot.chatbotId)
-			let res = [] as Robot.ChatbotRecordType[]
+			let res = [] as Robot.Record[]
 			if (fIndex !== -1) {
 				res = robot.chatbotRecords[fIndex].list
 			}
 			return res
+		})
+
+		const configName = computed(() => {
+			const settings = robot.chatbotSettings
+			const name = settings?.ScreenQAConfig?.ConfigName
+			return name
 		})
 
 		const showRightContent = computed(() => robot.showRightContent)
@@ -269,6 +291,7 @@ export default defineComponent({
 			// isFull.value = false;
 			isCollapsed.value = false;
 			robot.showRightContent = false;
+			robot.setShowCreate(false);
 		};
 
 		const onContentScroll = (e: any) => {
@@ -309,6 +332,7 @@ export default defineComponent({
 			cardEllipsisOptions,
 			showSettings: computed(() => robot.showSettings),
 			showCreate: computed(() => robot.showCreate),
+			configName,
 			showWelcome,
 			showRightContent,
 			onAfterEnter,
@@ -322,6 +346,35 @@ export default defineComponent({
 </script>
 
 <style lang="scss" scoped>
+.chatbot-header {
+	position: relative;
+	min-height: 24px;
+	.logo-box {
+		position: absolute;
+		top: -12px;
+		left: 36px;
+	}
+	.data-title {
+		width: 300px;
+		margin: 0 auto;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		cursor: pointer;
+		position: relative;
+		right: -22px;
+		font-weight: 500;
+		font-size: 14px;
+		img {
+			width: 24px;
+		}
+		.file-name {
+			white-space: nowrap;
+			text-overflow: ellipsis;
+			overflow: hidden;
+		}
+	}
+}
 .chatbot {
 	height: 100%;
 	border: 1px solid var(--n-border-color);
@@ -365,8 +418,19 @@ export default defineComponent({
 		}
 	}
 }
+.n-modal {
+	.n-card-header {
+		background-color: #f5f5f6;
+		border-bottom: 1px solid #bfbfbf;
+	}
 
-.n-modal .n-card__content {
-	overflow: hidden;
+	.n-card__content {
+		overflow: hidden;
+		padding: 0;
+	}
+
+	.n-layout-sider__border {
+		background-color: #bfbfbf !important;
+	}
 }
 </style>

@@ -6,7 +6,7 @@
 			</div>
 			<div class="main">
 				<div class="list">
-					<div class="list-item" :class="{'active': checkedValue === '1'}" @click.stop="itemClick('1')">
+					<div class="list-item mr-24px" :class="{'active': checkedValue === '1'}" @click.stop="itemClick('1')">
 						<div class="list-item-left">
 							<img src="@/assets/images/data-wd.png" />
 						</div>
@@ -119,7 +119,8 @@ export default defineComponent({
 	right: 0;
 	bottom: 0;
 	z-index: 100;
-	background-color: var(--baseColor);
+	// background-color: var(--baseColor);
+	background-color: #f5f5f6;
 	display: flex;
 	flex-direction: column;
 	align-items: center;
@@ -145,7 +146,6 @@ export default defineComponent({
 					width: 372px;
 					height: 100px;
 					margin-bottom: 12px;
-					margin-right: 12px;
 					border-radius: 12px;
 					padding: 12px;
 					display: flex;
@@ -153,8 +153,9 @@ export default defineComponent({
 					transition: all 0.3s cubic-bezier(0.36, 0.66, 0.04, 1);
 					border-color: transparent;
 					position: relative;
-					border: 1px solid rgb(239, 239, 245);
+					border: 1px solid transparent;
 					box-sizing: border-box;
+					background-color: #fff;
 					&:hover {
 						border: 1px solid #1890ff;
 					}

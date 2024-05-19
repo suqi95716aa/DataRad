@@ -3,7 +3,7 @@
 		<div class="logo mb-10">
 			<img src="~@/assets/images/ai-pic.png" alt="" />
 		</div>
-		<div class="name mb-10">AiRobot 分析工具</div>
+		<div class="name mb-10"><span class="text-26px">knowAny</span> 智能数据分析助手</div>
 		<div class="desc">欢迎使用</div>
 	</div>
 </template>
@@ -32,7 +32,8 @@ export default defineComponent({
 	flex-direction: column;
 	align-items: center;
 	justify-content: center;
-	background-color: var(--baseColor);
+	// background-color: var(--baseColor);
+	background-color: #f5f5f6;
 	.mb-10 {
 		margin-bottom: 10px;
 	}

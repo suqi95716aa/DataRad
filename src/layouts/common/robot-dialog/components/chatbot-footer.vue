@@ -79,29 +79,6 @@ export default defineComponent({
 			});
 		};
 
-		// const robotReplyHandle = () => {
-		// 	const id = nanoid();
-		// 	const datetime = moment().format('YYYY/MM/DD HH:mm:ss')
-		// 	const obj = reactive({
-		// 		id, // 会话记录id
-		// 		userType: 2, // 1 用户 2 机器人
-		// 		value: "hao de ",
-		// 		type: 2, // 会话记录类别 // 类型 1 文本 2 统计图 3 表格  其他待定
-		// 		datetime, // 日期时间
-		// 		state: 1, // 发送成功
-		// 		loaded: false,
-		// 		loading: true,
-		// 		data: {} as Robot.ChatbotRecordDataType
-		// 	});
-		// 	robot.addChatbotRecord(obj);
-		// 	setTimeout(() => {
-		// 		obj.loading = false;
-		// 		obj.loaded = true;
-		// 		robot.updateChatbotRecord(obj.id, obj);
-		// 		EventBus.emit('chatbot-content-scroll-to', { type: 'bom', behavior: 'smooth' })
-		// 	}, 1500);
-		// };
-
 		const sendClick = async () => {
 			if (!sendValue.value) return;
 

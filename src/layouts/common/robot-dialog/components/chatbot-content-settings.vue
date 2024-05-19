@@ -317,7 +317,7 @@ export default defineComponent({
 	setup() {
 		const formRef1 = ref<FormInst | null>(null);
 		const formRef2 = ref<FormInst | null>(null);
-		const tabIndex = ref("1");
+		const tabIndex = ref("2");
 		const isSpread = ref(false); // 是否展示分组数据
 		const isNotConfig = ref(false); // 是否未配置
 		const submitLoading = ref(false);
@@ -326,7 +326,7 @@ export default defineComponent({
 			desc: "",
 			configId: "",
 			configName: "",
-			groupList: [] as Robot.GroupListItemType[],
+			groupList: [] as Robot.GroupList[],
 		});
 
 		const auth = useAuthStore();
@@ -362,24 +362,26 @@ export default defineComponent({
 
 		const confirmBtnName = computed(() => {
 			let res = '保存'
-			switch(tabIndex.value) {
-				case '1':
-					if (isNotConfig.value) {
-						// res = '下一步'
-						res = '开始会话'
-					}
-					break
-				case '2':
-					if (isNotConfig.value) {
-						res = '开始会话'
-					}
-					break
-			}
+			// switch(tabIndex.value) {
+			// 	case '1':
+			// 		if (isNotConfig.value) {
+			// 			// res = '下一步'
+			// 			res = '开始会话'
+			// 		}
+			// 		break
+			// 	case '2':
+			// 		if (isNotConfig.value) {
+			// 			res = '开始会话'
+			// 		}
+			// 		break
+			// }
 			return res
 		})
 
+		const
+
 		onMounted(() => {
-			setChatbotSettings();
+			setChatbotSettings(2);
 			EventBus.on("init-chatbot-settings", () => {
 				init();
 			});
@@ -393,33 +395,34 @@ export default defineComponent({
 			form.desc =  "";
 			form.configId =  "";
 			form.configName =  "";
-			form.groupList =  [] as Robot.GroupListItemType[];
+			form.groupList =  [] as Robot.GroupList[];
 			isSpread.value = false;
-			tabIndex.value = "1";
+			tabIndex.value = "2";
 			isNotConfig.value = true;
 		}
 
 		const setChatbotSettings = (type: number = 1) => {
 			const settings = JSON.parse(JSON.stringify(robot.chatbotSettings));
-			const screenBasicConfig = settings.ScreenBasicConfig || {};
-			const screenQAConfig = settings.ScreenQAConfig || {};
+			// const settings: Robot.Settings = robot.chatbotSettings
+
 			const sourceItem = sourceOpts.value.find(
-				(i) => i.value === screenQAConfig.ConfigId
+				(i) => i.value === settings.ScreenQAConfig?.ConfigId
 			);
-			form.name = settings.name || screenBasicConfig.ScreenName;
-			form.desc = settings.desc || screenBasicConfig.ScreenDesc;
+			form.name = settings.ScreenBasicConfig?.ScreenName;
+			form.desc = settings.ScreenBasicConfig?.ScreenDesc;
 			tabIndex.value = type === 1 ? "1" : "2";
 
+			const GroupList = settings.ScreenQAConfig?.GroupList || []
 			if (sourceItem) {
-				form.configId = screenQAConfig.ConfigId || undefined;
-				form.configName = screenQAConfig.ConfigName || undefined;
-				form.groupList = screenQAConfig.GroupList?.map((item: any) => {
-					(item.checked = item.checked === 1 ? true : false),
-						(item.sheets = sourceItem?.sheetOpts || []);
+				form.configId = settings.ScreenQAConfig?.ConfigId;
+				form.configName = settings.ScreenQAConfig?.ConfigName;
+				form.groupList = GroupList.map((item: Robot.GroupList) => {
+					item.checked = item.checked === 1 ? true : false;
+					item.sheets = sourceItem?.sheetOpts || [];
 					return item;
-				}) || [];
-				isNotConfig.value = screenQAConfig.ConfigId ? false : true;
-				isSpread.value = screenQAConfig.GroupList?.length > 0 ? true : false;
+				});
+				isNotConfig.value = settings.ScreenQAConfig?.ConfigId ? false : true;
+				isSpread.value = GroupList.length > 0 ? true : false;
 			} else {
 				isNotConfig.value = true;
 			}
@@ -669,9 +672,9 @@ export default defineComponent({
 						return
 					}
 					if (!robot.chatbotId) {
-						addSubmitHandle();
+						addSubmit();
 					} else {
-						submitHandle();
+						editSubmit();
 					}
 				}
 			}
@@ -679,9 +682,9 @@ export default defineComponent({
 			formRef2.value?.validate((errors) => {
 				if (!errors) {
 					if (!robot.chatbotId) {
-						addSubmitHandle();
+						addSubmit();
 					} else {
-						submitHandle();
+						editSubmit();
 					}
 				} else {
 					console.log("errors", errors);
@@ -689,7 +692,7 @@ export default defineComponent({
 			});
 		};
 
-		const addSubmitHandle = async () => {
+		const addSubmit = async () => {
 			const groupList = form.groupList.map((item) => {
 				return {
 					id: item.id,
@@ -710,10 +713,10 @@ export default defineComponent({
 			robot.setShowSettings(false);
 		};
 
-		const submitHandle = async () => {
-			const checkGroupList = form.groupList.some((item: any) => {
+		const editSubmit = async () => {
+			const checkGroupList = form.groupList.some((item) => {
 				const children = item?.children || [];
-				const checkChildren = children.some((sItem: any) => {
+				const checkChildren = children.some((sItem) => {
 					return !sItem?.sheetName;
 				});
 				return checkChildren;
@@ -729,15 +732,9 @@ export default defineComponent({
 				return;
 			}
 
-			let chatbotItem =
-				robot.chatbotList.find((item) => item.ScreenId === robot.chatbotId) ||
-				{};
-			let settings = chatbotItem.settings || {};
-			let screenBasicConfig = settings.ScreenBasicConfig || {};
-			let screenQAConfig = settings.ScreenQAConfig || {};
+			const chatbotItem = robot.chatbotItem
 
-			const groupList =
-				form.groupList.map((item) => {
+			const groupList = form.groupList.map((item) => {
 					return {
 						id: item.id,
 						checked: item.checked ? 1 : 0,
@@ -748,29 +745,21 @@ export default defineComponent({
 
 			submitLoading.value = true;
 
-			const res = await robot.updateChatbot(robot.chatbotId, {
-				...chatbotItem,
-				screenName: form.name,
-				settings: {
-					...settings,
-					ScreenBasicConfig: {
-						...screenBasicConfig,
-						ScreenName: form.name,
-						ScreenDesc: form.desc,
-					},
-					ScreenQAConfig: {
-						...screenQAConfig,
-						ConfigId: form.configId || "",
-						ConfigName: form.configName || "",
-						GroupList: groupList,
-					},
-					modelConfig: {},
-				},
-			});
+			const params = {
+				ScreenId: robot.chatbotId,
+				ScreenName: form.name,
+				ScreenDesc: form.desc,
+				ConfigId: form.configId,
+				ConfigName: form.configName,
+				ScreenType: chatbotItem.ScreenType,
+				GroupList: groupList
+			}
+
+			const results = await robot.updateChatbot(params)
 
 			submitLoading.value = false;
 
-			if (!res) return;
+			if (!results) return;
 
 			robot.setShowSettings(false);
 		};
@@ -835,7 +824,8 @@ export default defineComponent({
 	right: 0;
 	bottom: 0;
 	z-index: 100;
-	background-color: var(--baseColor);
+	// background-color: var(--baseColor);
+	background-color: #f5f5f6;
 	display: flex;
 	flex-direction: column;
 	align-items: center;

@@ -27,11 +27,11 @@ declare namespace StorageInterface {
 		/** 问答数据源配置信息 */
 		wdConfigInfo: [];
 		/* 会话列表 */
-		chatbotList: Robot.ChatbotItemType[];
+		chatbotList: Robot.Chatbot[];
 		/* 选中会话id */
 		chatbotId: string;
 		/* 会话记录 */
-		chatbotRecords: Robot.ChatbotRecordsType[];
+		chatbotRecords: Robot.Records[];
 		/* 知识库 */
 		knowledgeBaseList: Knowledge.Base[];
   }

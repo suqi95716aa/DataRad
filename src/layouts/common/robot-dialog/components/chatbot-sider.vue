@@ -2,9 +2,15 @@
 	<div class="chatbot-sider">
 		<div class="chatbot-sider_top">
 			<div class="btn-item">
-				<n-button style="width: 100%" dashed :loading="addLoading" @click="addChatbotClick">
+				<div class="new-btn" @click="addChatbotClick">
+					<n-icon class="mr-4px" size="24">
+						<AddIcon/>
+					</n-icon>
+					<span>开启新会话</span>
+				</div>
+				<!-- <n-button style="width: 100%" dashed @click="addChatbotClick">
 					开启新会话
-				</n-button>
+				</n-button> -->
 			</div>
 		</div>
 		<div class="chatbot-sider_middle">
@@ -18,8 +24,8 @@
 						@click.stop.prevent="itemClick(item)"
 					>
 						<div class="pic-box">
-							<img v-if="item.ScreenType === 1" :src="picIcon1" alt="" />
-							<img v-if="item.ScreenType === 2" :src="picIcon2" alt="" />
+							<img v-if="Number(item.ScreenType) === 1" :src="picIcon1" alt="" />
+							<img v-if="Number(item.ScreenType) === 2" :src="picIcon2" alt="" />
 						</div>
 						<!-- <n-icon><chatbox-icon /></n-icon> -->
 						<div v-if="item.isEdit" class="inner-box pl-10" @click.stop.prevent>
@@ -39,6 +45,7 @@
 								circle
 								size="small"
 								type="info"
+								:loading="loading"
 								@click.stop.prevent="saveClick(item.ScreenId, item)"
 							>
 								<template #icon>
@@ -107,7 +114,7 @@
 			</n-scrollbar>
 		</div>
 		<div class="chatbot-sider_bottom"></div>
-		<div class="chatbot-sider_footer">
+		<!-- <div class="chatbot-sider_footer">
 			<div class="r-pic">
 				<img src="../imgs/r_pic.png" alt="" />
 			</div>
@@ -122,12 +129,13 @@
 					</template>
 				</n-button>
 			</div>
-		</div>
+		</div> -->
 	</div>
 </template>
 
 <script lang="ts">
 import {
+	Add as AddIcon,
 	ChatboxEllipsesOutline as ChatboxIcon,
 	TrashOutline as TrashIcon,
 	SettingsOutline as SettingsIcon,
@@ -143,6 +151,7 @@ import { EventBus } from "@/utils";
 
 export default defineComponent({
 	components: {
+		AddIcon,
 		SettingsIcon,
 		CreateIcon,
 		TrashIcon,
@@ -152,20 +161,20 @@ export default defineComponent({
 	setup() {
 		const moreRef = ref();
 		const inputRef = ref();
-		const addLoading = ref(false);
+		const loading = ref(false);
 
 		const robot = useRobotStore();
 
 		const chatbotList = computed(() => robot.chatbotList);
 		const activeId = computed(() => robot.chatbotId);
 
-		const getScreenName = (item: Robot.ChatbotItemType) => {
+		const getScreenName = (item: Robot.Chatbot) => {
 			return item.settings?.ScreenBasicConfig?.ScreenName || "";
 		}
 
 		const handleSelect = (
 			key: string | number,
-			item: Robot.ChatbotItemType
+			item: Robot.Chatbot
 		) => {
 			const cIndex = chatbotList.value.findIndex((i) => i.ScreenId === item.ScreenId);
 			switch (key) {
@@ -194,17 +203,28 @@ export default defineComponent({
 			// EventBus.emit('init-chatbot-settings');
 		};
 
-		const saveClick = async (id: string = "", item: Robot.ChatbotItemType) => {
-			item.isEdit = false;
-			const res = await robot.updateChatbot(id, {
-				ScreenName: item.screenName
-			}, 'basicConfig');
-			if (res) {
+		const saveClick = async (id: string = "", item: Robot.Chatbot) => {
+			const params = {
+				ScreenId: id,
+				ScreenName: item.screenName,
+				ScreenDesc: item.settings?.ScreenBasicConfig?.ScreenDesc,
+				ConfigId: item.settings?.ScreenQAConfig?.ConfigId,
+				ConfigName: item.settings?.ScreenQAConfig?.ConfigName,
+				ScreenType: item.ScreenType,
+				GroupList: item.settings?.ScreenQAConfig?.GroupList
+			}
+
+			loading.value = true;
+			const results = await robot.updateChatbot(params)
+			loading.value = false;
+
+			if (results) {
 				EventBus.emit('set-chatbot-settings');
+				item.isEdit = false;
 			}
 		};
 
-		const itemClick = (item: Robot.ChatbotItemType) => {
+		const itemClick = (item: Robot.Chatbot) => {
 			robot.setChatbotId(item.ScreenId);
 			EventBus.emit("back-bom");
 			robot.setShowCreate(false);
@@ -214,7 +234,7 @@ export default defineComponent({
 		return {
 			more: moreRef,
 			inputRef,
-			addLoading,
+			loading,
 			chatbotList,
 			activeId,
 			picIcon1,
@@ -234,11 +254,29 @@ export default defineComponent({
 	height: 100%;
 	display: flex;
 	flex-direction: column;
-	// background-color: #f5f5f6;
+	background-color: #f5f5f6;
 	.chatbot-sider_top {
-		border-bottom: 1px solid var(--n-border-color);
+		// border-bottom: 1px solid var(--n-border-color);
 		.btn-item {
 			padding: 8px 12px;
+			.new-btn {
+				height: 54px;
+				line-height: 54px;
+				text-align: center;
+				font-size: 14px;
+				font-weight: 500;
+				cursor: pointer;
+				background-color: #fff;
+				border-radius: 6px;
+				border: 1px solid transparent;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				&:hover {
+					color: #40a9ff;
+					border: 1px solid #40a9ff;
+				}
+			}
 		}
 	}
 	.chatbot-sider_middle {
@@ -256,6 +294,7 @@ export default defineComponent({
 				cursor: pointer;
 				display: flex;
 				align-items: center;
+				background-color: #fff;
 				&:first-child {
 					margin-top: 0;
 				}
