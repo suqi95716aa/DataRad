@@ -16,10 +16,7 @@ import {
 	fetchGetDhQuery,
 } from "@/service";
 import { useAuthStore } from "../auth";
-import { toRaw } from "vue";
 import { EventBus } from "@/utils";
-
-type updateType = "default" | "settings" | "basicConfig" | "sourceConfig";
 
 type RecordParamsType = {
 	value: string;
@@ -188,10 +185,20 @@ export const useRobotStore = defineStore("robot-store", {
 			formData.append("ScreenId", params.ScreenId);
 			formData.append("ScreenName", params.ScreenName);
 			formData.append("ScreenDesc", params.ScreenDesc);
-			formData.append("ConfigId", params.ConfigId);
-			formData.append("ConfigName", params.ConfigName);
 			formData.append("ScreenType", params.ScreenType);
-			formData.append("GroupList", JSON.stringify(params.GroupList));
+
+			switch (params.ScreenType) {
+				case 1:
+					formData.append("ConfigId", params.ConfigId);
+					formData.append("ConfigName", params.ConfigName);
+					formData.append("GroupList", JSON.stringify(params.GroupList));
+					break;
+				case 2:
+					formData.append("SimilarityThreshold", params.SimilarityThreshold);
+					formData.append("RelevantHits", params.SimilarityThreshold);
+					formData.append("KBIDS", JSON.stringify(params.KBIDS));
+					break;
+			}
 
 			try {
 				const results = await fetchUpdateScreen(formData);
@@ -322,12 +329,19 @@ export const useRobotStore = defineStore("robot-store", {
 				behavior: "smooth",
 			});
 
+			const ScreenType = this.chatbotItem?.ScreenType
+			const groupList = this.chatbotItem?.settings?.ScreenQAConfig?.GroupList || []
+
 			const formData = new FormData();
 			formData.append("UserId", userInfo.userId);
 			formData.append("ScreenId", this.chatbotId + "");
 			formData.append("Query", params.value);
-			formData.append("ScreenType", this.chatbotItem.ScreenType);
-			formData.append("ByGroup", "1");
+			formData.append("ScreenType", ScreenType);
+
+			// 数据助手问答
+			if (Number(ScreenType) === 1) {
+				formData.append("ByGroup", groupList.length ? '1' : '0');
+			}
 
 			const results = await fetchGetDhQuery(formData);
 

@@ -54,182 +54,212 @@
 						</n-button>
 					</div> -->
 				</n-tab-pane>
-				<n-tab-pane name="2" tab="常规配置">
+				<n-tab-pane name="2" tab="高级配置">
 					<n-form
 						ref="formRef2"
 						:model="form"
 						:rules="rules"
 						class="tabs-inner-form"
 					>
-						<n-form-item-row
-							style="padding: 0 16px"
-							label="选择数据源"
-							path="configId"
-						>
-							<n-select
-								:value="form.configId || undefined"
-								placeholder="请选择数据源"
-								:options="sourceOpts"
-								:on-update:value="(value) => selectSourceChange(value)"
-							/>
-						</n-form-item-row>
-						<n-divider dashed style="padding: 0 16px; margin-top: 0" />
-						<div class="tips-box">
-							<div class="b-left">
-								<p class="mr-10">添加分组可以让您的数据匹配更精确哦!</p>
-								<n-button
-									tertiary
-									type="info"
-									size="tiny"
-									:disabled="form.groupList.length >= 3"
-									@click="addGroupClick"
-									>添加分组</n-button
+						<div v-if="Number(ScreenType) === 1">
+							<n-form-item-row
+								style="padding: 0 16px"
+								label="选择数据源"
+								path="configId"
+							>
+								<n-select
+									:value="form.configId || undefined"
+									placeholder="请选择数据源"
+									:options="sourceOpts"
+									:on-update:value="(value) => selectSourceChange(value)"
+								/>
+							</n-form-item-row>
+							<n-divider dashed style="padding: 0 16px; margin-top: 0" />
+							<div class="tips-box">
+								<div class="b-left">
+									<p class="mr-10">添加分组可以让您的数据匹配更精确哦!</p>
+									<n-button
+										tertiary
+										type="info"
+										size="tiny"
+										:disabled="form.groupList.length >= 3"
+										@click="addGroupClick"
+										>添加分组</n-button
+									>
+								</div>
+								<n-switch
+									v-if="form.groupList.length"
+									v-model:value="isSpread"
+									size="small"
 								>
+									<template #checked> 展开 </template>
+									<template #unchecked> 收起 </template>
+								</n-switch>
 							</div>
-							<n-switch
-								v-if="form.groupList.length"
-								v-model:value="isSpread"
-								size="small"
-							>
-								<template #checked> 展开 </template>
-								<template #unchecked> 收起 </template>
-							</n-switch>
-						</div>
-						<n-collapse-transition :show="isSpread">
-							<n-scrollbar
-								style="max-height: 300px; padding: 0 16px; margin-bottom: 24px"
-							>
-								<n-form-item
-									class="form-item-group"
-									:show-feedback="false"
-									v-for="(group, groupIndex) in form.groupList"
-									:key="group.id"
-									@click.stop.prevent
+							<n-collapse-transition :show="isSpread">
+								<n-scrollbar
+									style="max-height: 300px; padding: 0 16px; margin-bottom: 24px"
 								>
-									<template #label>
-										<div class="f-label">
-											<div class="f-label-left">
-												<n-checkbox
-													v-model:checked="group.checked"
-													class="mr-10"
-													size="large"
-												/>
-												<span class="mr-10"
-													>分组{{ Number(groupIndex) + 1 }}</span
-												>
-												<!-- <n-button tertiary type="info" size="tiny" >
-													添加子分组
-												</n-button> -->
-											</div>
-											<div class="f-label-right">
-												<n-popconfirm
-													positive-text="删除"
-													@positive-click="() => delGroupClick(groupIndex)"
-												>
-													<template #trigger>
-														<n-button size="small" tertiary circle quaternary>
-															<template #icon>
-																<n-icon :size="16">
-																	<TrashIcon />
-																</n-icon>
-															</template>
-														</n-button>
-													</template>
-													<span style="white-space: nowrap">删除该分组？</span>
-												</n-popconfirm>
-											</div>
-										</div>
-										<n-divider
-											style="padding: 0; margin-top: 5px; margin-bottom: 0"
-										/>
-									</template>
-									<div class="group-list">
-										<div class="group-item">
-											<n-dynamic-input
-												v-model:value="group.children"
-												item-style="margin-bottom: 0;"
-												#="{ index }"
-												:min="2"
-												:max="3"
-												:on-create="addChildGroup"
-											>
-												<div style="display: flex">
-													<n-form-item
-														ignore-path-change
-														:show-label="false"
-														:path="`groupList[${groupIndex}].children[${index}].sheetName`"
-														:rule="rules.sheetName"
+									<n-form-item
+										class="form-item-group"
+										:show-feedback="false"
+										v-for="(group, groupIndex) in form.groupList"
+										:key="group.id"
+										@click.stop.prevent
+									>
+										<template #label>
+											<div class="f-label">
+												<div class="f-label-left">
+													<n-checkbox
+														v-model:checked="group.checked"
+														class="mr-10"
+														size="large"
+													/>
+													<span class="mr-10"
+														>分组{{ Number(groupIndex) + 1 }}</span
 													>
-														<n-select
-															:value="
-																group.children[index].sheetName || undefined
-															"
-															placeholder="请选择"
-															:options="group.sheets"
-															clearable
-															style="width: 228px"
-															:on-update:show="
-																(show) =>
-																	onUpdateShowSheetSelect(
-																		show,
-																		group.sheets,
-																		group.children
-																	)
-															"
-															:on-update:value="
-																(value) =>
-																	selectSheetChange(
-																		value,
-																		group.sheets,
-																		group.children[index],
-																		group.children
-																	)
-															"
-														/>
-													</n-form-item>
-													<div
-														style="
-															height: 34px;
-															line-height: 34px;
-															margin: 0 8px;
-														"
-													></div>
-													<n-form-item
-														ignore-path-change
-														:show-label="false"
-														:path="`groupList[${groupIndex}].children[${index}].fieldName`"
-														:rule="rules.fieldName"
-													>
-														<n-select
-															:value="group.children[index].fieldName"
-															placeholder="请选择"
-															clearable
-															:options="
-																getFieldOpts(
-																	group.children[index].sheetName || '',
-																	group.sheets,
-																	group.children
-																)
-															"
-															style="width: 228px"
-															:on-update:value="
-																(value) =>
-																	selectFieldChange(
-																		value,
-																		group.sheets,
-																		group.children,
-																		index
-																	)
-															"
-														/>
-													</n-form-item>
+													<!-- <n-button tertiary type="info" size="tiny" >
+														添加子分组
+													</n-button> -->
 												</div>
-											</n-dynamic-input>
+												<div class="f-label-right">
+													<n-popconfirm
+														positive-text="删除"
+														@positive-click="() => delGroupClick(groupIndex)"
+													>
+														<template #trigger>
+															<n-button size="small" tertiary circle quaternary>
+																<template #icon>
+																	<n-icon :size="16">
+																		<TrashIcon />
+																	</n-icon>
+																</template>
+															</n-button>
+														</template>
+														<span style="white-space: nowrap">删除该分组？</span>
+													</n-popconfirm>
+												</div>
+											</div>
+											<n-divider
+												style="padding: 0; margin-top: 5px; margin-bottom: 0"
+											/>
+										</template>
+										<div class="group-list">
+											<div class="group-item">
+												<n-dynamic-input
+													v-model:value="group.children"
+													item-style="margin-bottom: 0;"
+													#="{ index }"
+													:min="2"
+													:max="3"
+													:on-create="addChildGroup"
+												>
+													<div style="display: flex">
+														<n-form-item
+															ignore-path-change
+															:show-label="false"
+															:path="`groupList[${groupIndex}].children[${index}].sheetName`"
+															:rule="rules.sheetName"
+														>
+															<n-select
+																:value="
+																	group.children[index].sheetName || undefined
+																"
+																placeholder="请选择"
+																:options="group.sheets"
+																clearable
+																style="width: 228px"
+																:on-update:show="
+																	(show) =>
+																		onUpdateShowSheetSelect(
+																			show,
+																			group.sheets,
+																			group.children
+																		)
+																"
+																:on-update:value="
+																	(value) =>
+																		selectSheetChange(
+																			value,
+																			group.sheets,
+																			group.children[index],
+																			group.children
+																		)
+																"
+															/>
+														</n-form-item>
+														<div
+															style="
+																height: 34px;
+																line-height: 34px;
+																margin: 0 8px;
+															"
+														></div>
+														<n-form-item
+															ignore-path-change
+															:show-label="false"
+															:path="`groupList[${groupIndex}].children[${index}].fieldName`"
+															:rule="rules.fieldName"
+														>
+															<n-select
+																:value="group.children[index].fieldName"
+																placeholder="请选择"
+																clearable
+																:options="
+																	getFieldOpts(
+																		group.children[index].sheetName || '',
+																		group.sheets,
+																		group.children
+																	)
+																"
+																style="width: 228px"
+																:on-update:value="
+																	(value) =>
+																		selectFieldChange(
+																			value,
+																			group.sheets,
+																			group.children,
+																			index
+																		)
+																"
+															/>
+														</n-form-item>
+													</div>
+												</n-dynamic-input>
+											</div>
 										</div>
-									</div>
-								</n-form-item>
-							</n-scrollbar>
-						</n-collapse-transition>
+									</n-form-item>
+								</n-scrollbar>
+							</n-collapse-transition>
+						</div>
+						<div v-if="Number(ScreenType) === 2">
+							<div class="mb-20px">
+								<n-switch v-model:value="form.openkbset" />
+								<span class="ml-10px">{{ form.openkbset ? '关闭' : '开启' }}知识库配置</span>
+							</div>
+							<n-form-item-row
+								v-if="form.openkbset"
+								class="form-item-kb"
+								label="选择知识库与知识（最多可配置3个知识库）"
+								path="kbListVal"
+							>
+							<n-tree-select
+								multiple
+								cascade
+								checkable
+								check-strategy="all"
+								v-model:value="form.kbListVal"
+								:options="kbOpts"
+								@update:value="handleKbListUpdateValue"
+							/>
+							</n-form-item-row>
+							<n-form-item-row v-if="form.openkbset" label="最大召回的个数（1-6）" path="RelevantHits">
+								<n-input-number v-model:value="form.RelevantHits" style="width: 600px;" :min="1" :max="6" />
+							</n-form-item-row>
+							<n-form-item-row v-if="form.openkbset" label="相似度羽化值（0-100）" path="SimilarityThreshold">
+								<n-input-number v-model:value="form.SimilarityThreshold" style="width: 600px;" :min="0" :max="100" />
+							</n-form-item-row>
+						</div>
 					</n-form>
 					<!-- <div class="tabs-footer-btns">
 						<n-button
@@ -291,6 +321,8 @@ import {
 	TrashOutline as TrashIcon,
 	RemoveCircle as RemoveIcon,
 	AddCircle as AddIcon,
+	AddOutline as AddOutlineIcon,
+	RemoveOutline as RemoveOutlineIcon
 } from "@vicons/ionicons5";
 import { nanoid } from "nanoid";
 import { FormInst } from "naive-ui";
@@ -303,7 +335,8 @@ import {
 	computed,
 	onMounted
 } from "vue";
-import { useRobotStore, useAuthStore } from "@/store";
+import { TreeSelectOption } from 'naive-ui';
+import { useRobotStore, useAuthStore, useKnowledgeStore } from "@/store";
 import { EventBus } from "@/utils";
 
 const intOpts = ['int64', 'int32', 'float64', 'float32'];
@@ -313,6 +346,8 @@ export default defineComponent({
 		RemoveIcon,
 		AddIcon,
 		TrashIcon,
+		AddOutlineIcon,
+		RemoveOutlineIcon
 	},
 	setup() {
 		const formRef1 = ref<FormInst | null>(null);
@@ -321,16 +356,24 @@ export default defineComponent({
 		const isSpread = ref(false); // 是否展示分组数据
 		const isNotConfig = ref(false); // 是否未配置
 		const submitLoading = ref(false);
+		const kbMax = ref(3);
 		const form = reactive({
 			name: "",
 			desc: "",
 			configId: "",
 			configName: "",
 			groupList: [] as Robot.GroupList[],
+			RelevantHits: 4,
+			SimilarityThreshold: 0,
+			kbListVal: ['da2b38e'],
+			openkbset: true
 		});
 
 		const auth = useAuthStore();
 		const robot = useRobotStore();
+		const knowledge = useKnowledgeStore();
+
+		const ScreenType = computed(() => robot.chatbotItem?.ScreenType);
 
 		const sourceOpts = computed(() => {
 			return (
@@ -359,6 +402,34 @@ export default defineComponent({
 				}) || []
 			);
 		});
+
+		const getKbOpts = () => {
+			const kbList = knowledge.knowledgeBaseList || []
+			const options: TreeSelectOption[] = []
+			for(let i = 0; i < kbList.length; i++) {
+				const data = kbList[i].data || []
+				const children: TreeSelectOption[] = []
+				for (let j = 0; j < data.length; j++) {
+					children.push({
+						label: data[j].KName,
+						key: data[j].KID
+					})
+				}
+				const obj: TreeSelectOption  = {
+					label: kbList[i].KBName,
+					key: kbList[i].KBID
+				}
+				if (children.length > 0) {
+					obj.children = children
+				}
+				options.push(obj)
+			}
+			console.log('options-----', options)
+			return options
+		}
+
+		const kbOpts = ref<TreeSelectOption[]>([])
+		kbOpts.value = getKbOpts()
 
 		const confirmBtnName = computed(() => {
 			let res = '保存'
@@ -389,10 +460,10 @@ export default defineComponent({
 		});
 
 		const init = () => {
-			form.name =  "";
-			form.desc =  "";
-			form.configId =  "";
-			form.configName =  "";
+			form.name = "";
+			form.desc = "";
+			form.configId = "";
+			form.configName = "";
 			form.groupList =  [] as Robot.GroupList[];
 			isSpread.value = false;
 			tabIndex.value = "2";
@@ -401,11 +472,15 @@ export default defineComponent({
 
 		const setChatbotSettings = (type: number = 1) => {
 			const settings = JSON.parse(JSON.stringify(robot.chatbotSettings));
+			console.log('settings-----aaa', settings)
+			console.log('ScreenType-----', ScreenType.value)
 			// const settings: Robot.Settings = robot.chatbotSettings
+			const ScreenQAConfig = settings.ScreenQAConfig || ({} as Robot.ScreenQAConfig)
 
 			const sourceItem = sourceOpts.value.find(
 				(i) => i.value === settings.ScreenQAConfig?.ConfigId
 			);
+
 			form.name = settings.ScreenBasicConfig?.ScreenName;
 			form.desc = settings.ScreenBasicConfig?.ScreenDesc;
 			tabIndex.value = type === 1 ? "1" : "2";
@@ -423,6 +498,12 @@ export default defineComponent({
 				isSpread.value = GroupList.length > 0 ? true : false;
 			} else {
 				isNotConfig.value = true;
+			}
+
+			if (ScreenType.value === '2') {
+				form.RelevantHits = Number(ScreenQAConfig.RelevantHits)
+				form.SimilarityThreshold = Number(ScreenQAConfig.SimilarityThreshold)
+				form.kbListVal = getResKBIDS(ScreenQAConfig.KBIDS)
 			}
 		};
 
@@ -453,6 +534,66 @@ export default defineComponent({
 				}
 			}
 		);
+
+		// methods
+		const getResKBIDS = (list: any) => {
+			let res: string[] = []
+			if (Array.isArray(list)) {
+				list.forEach(item => {
+					const keys = Object.keys(item)
+					keys.forEach(k => {
+						res.push(k)
+						const children = item[k] || []
+						if (children) {
+							children.forEach((c: any) => {
+								const keys = Object.keys(c) || []
+								res.push(...keys)
+							})
+						}
+					})
+				})
+			}
+
+			return res
+		}
+
+		const handleKbListUpdateValue = (values: string | number | Array<string | number> | null, option: TreeSelectOption | null | Array<TreeSelectOption | null>) => {
+			let selectedParentKeys: string[] = []
+
+			if (Array.isArray(values)) {
+				for(let i = 0; i < kbOpts.value.length; i++) {
+					const item = kbOpts.value[i] || {}
+					const children = item.children || []
+					const check = children.some((v) => values.includes(String(v.key)))
+					if (check) {
+						selectedParentKeys.push(String(item.key))
+					}
+				}
+			}
+
+			if (selectedParentKeys.length >= kbMax.value) {
+				kbOpts.value.forEach((item) => {
+					const children = item.children
+					if (!selectedParentKeys.includes(String(item.key))) {
+						item.disabled = true
+						if (children) {
+							children.forEach((v) => {
+								v.disabled = true
+							})
+						}
+					}
+				})
+			} else {
+				kbOpts.value.forEach((item) => {
+					item.disabled = false
+					if (item.children) {
+						item.children.forEach((v) => {
+							v.disabled = false
+						})
+					}
+				})
+			}
+		}
 
 		const selectSourceChange = (value: string) => {
 			const settings = JSON.parse(JSON.stringify(robot.chatbotSettings));
@@ -690,6 +831,33 @@ export default defineComponent({
 			});
 		};
 
+		const handleKBIDS = () => {
+			const values = form.kbListVal
+			const opts = kbOpts.value
+			let parents = []
+			for(let i = 0; i < opts.length; i++) {
+				const item = opts[i] || {}
+				const children = item.children || []
+				const check = children.some((v) => values.includes(String(v.key)))
+				if (check) {
+					let key: string = item.key + ''
+					let arr = children.map(v => {
+						let k: string = String(v.key)
+						return {
+							[k]: {
+								status: values.includes(k),
+								kName: v.label
+							}
+						}
+					}) || []
+					parents.push({
+						[key]: arr
+					})
+				}
+			}
+			return parents
+		}
+
 		const addSubmit = async () => {
 			const groupList = form.groupList.map((item) => {
 				return {
@@ -743,14 +911,21 @@ export default defineComponent({
 
 			submitLoading.value = true;
 
+			const kbids = handleKBIDS()
+
+			console.log('kbids------fasf', kbids)
+
 			const params = {
 				ScreenId: robot.chatbotId,
 				ScreenName: form.name,
 				ScreenDesc: form.desc,
 				ConfigId: form.configId,
 				ConfigName: form.configName,
-				ScreenType: chatbotItem.ScreenType,
-				GroupList: groupList
+				ScreenType: Number(chatbotItem.ScreenType),
+				GroupList: groupList,
+				SimilarityThreshold: form.SimilarityThreshold,
+				RelevantHits: form.RelevantHits,
+				KBIDS: handleKBIDS()
 			}
 
 			const results = await robot.updateChatbot(params)
@@ -773,8 +948,10 @@ export default defineComponent({
 			tabIndex,
 			isSpread,
 			submitLoading,
+			ScreenType,
 			form,
 			sourceOpts,
+			kbOpts,
 			rules: {
 				name: {
 					required: true,
@@ -796,6 +973,24 @@ export default defineComponent({
 					trigger: ["blur", "input"],
 					message: "请选择",
 				},
+				RelevantHits: {
+					required: true,
+					type: 'number',
+					trigger: ["blur", "input"],
+					message: "不能为空",
+				},
+				SimilarityThreshold: {
+					required: true,
+					type: 'number',
+					trigger: ["blur", "input"],
+					message: "不能为空",
+				},
+				kbListVal: {
+					required: true,
+					type: 'array',
+					trigger: ["blur", "input"],
+					message: "请选择"
+				}
 			},
 			confirmBtnName,
 			nextStepClick,
@@ -809,12 +1004,16 @@ export default defineComponent({
 			onUpdateShowSheetSelect,
 			getFieldOpts,
 			selectFieldChange,
+			handleKbListUpdateValue
 		};
 	},
 });
 </script>
 
 <style lang="scss" scoped>
+.n-tabs-pane-wrapper {
+	overflow: initial;
+}
 .setting-box {
 	position: absolute;
 	top: 0;
@@ -850,6 +1049,8 @@ export default defineComponent({
 				}
 			}
 			.tabs-inner-form {
+				margin-top: 20px;
+				padding: 0 50px;
 				:deep(.n-form-item--top-labelled) {
 					grid-template-rows: initial;
 				}
@@ -883,6 +1084,35 @@ export default defineComponent({
 						left: 0;
 						width: 2px;
 						background-color: #1890ff;
+					}
+				}
+
+				.kb-wrapper {
+					width: 100%;
+					display: flex;
+					flex-direction: column;
+					.kb-list {
+						position: relative;
+						width: 100%;
+						display: flex;
+						align-items: center;
+						.kb-list-action {
+							position: absolute;
+							right: -50px;
+							top: 0;
+							width: 40px;
+							height: 34px;
+							display: flex;
+							align-items: center;
+							z-index: 10;
+						}
+						.kb-list-left {
+							flex: 1;
+							overflow: hidden;
+						}
+						.kb-list-right {
+
+						}
 					}
 				}
 			}

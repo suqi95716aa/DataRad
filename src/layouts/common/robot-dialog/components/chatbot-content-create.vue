@@ -87,7 +87,7 @@ export default defineComponent({
 				ConfigId: "",
 				ConfigName: "",
 				ScreenType: Number(checkedValue.value),
-				GroupList: []
+				GroupList: [],
 			}
 			loading.value = true;
 			const results = await robot.addChatbot(params);
