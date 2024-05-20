@@ -228,6 +228,7 @@ export default defineComponent({
 			robot.setChatbotId(item.ScreenId);
 			EventBus.emit("back-bom");
 			robot.setShowCreate(false);
+			robot.setShowSettings(false);
 			// robot.checkChatbotSettings();
 		};
 
