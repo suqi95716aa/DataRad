@@ -1,6 +1,8 @@
 import { defineStore } from "pinia";
 import { nanoid } from "nanoid";
 import moment from "moment";
+import querystring from 'querystring';
+import qs from 'qs';
 import {
 	getChatbotList,
 	getActiveChatbotId,
@@ -14,6 +16,7 @@ import {
 	fetchDeleteScreen,
 	fetchUpdateScreen,
 	fetchGetDhQuery,
+	fetchGetKbqaQuery
 } from "@/service";
 import { useAuthStore } from "../auth";
 import { EventBus } from "@/utils";
@@ -156,6 +159,7 @@ export const useRobotStore = defineStore("robot-store", {
 			this.chatbotId = resData.ScreenId;
 			const welcomeObj = {
 				id: nanoid(),
+				screenType: params.ScreenType, // 场景类型
 				userType: 2, // 1 用户 2 机器人
 				value: "", // 输入的文本内容
 				datetime: moment().format("YYYY/MM/DD HH:mm:ss"), // 日期时间
@@ -195,7 +199,7 @@ export const useRobotStore = defineStore("robot-store", {
 					break;
 				case 2:
 					formData.append("SimilarityThreshold", params.SimilarityThreshold);
-					formData.append("RelevantHits", params.SimilarityThreshold);
+					formData.append("RelevantHits", params.RelevantHits);
 					formData.append("KBIDS", JSON.stringify(params.KBIDS));
 					break;
 			}
@@ -276,8 +280,11 @@ export const useRobotStore = defineStore("robot-store", {
 			const id1 = nanoid();
 			const id2 = nanoid();
 			const datetime = moment().format("YYYY/MM/DD HH:mm:ss");
+			const ScreenType = this.chatbotItem?.ScreenType
+
 			const obj1 = {
 				id: id1,
+				screenType: Number(ScreenType),
 				userType: 1, // 1 用户 2 机器人
 				value: params.value, // 输入的文本内容
 				type: 1, // 1 文本
@@ -289,6 +296,7 @@ export const useRobotStore = defineStore("robot-store", {
 			};
 			const obj2 = {
 				id: id2,
+				screenType: Number(ScreenType),
 				userType: 2, // 1 用户 2 机器人
 				value: "", // 输入的文本内容
 				type: 1, // 1 文本
@@ -329,7 +337,6 @@ export const useRobotStore = defineStore("robot-store", {
 				behavior: "smooth",
 			});
 
-			const ScreenType = this.chatbotItem?.ScreenType
 			const groupList = this.chatbotItem?.settings?.ScreenQAConfig?.GroupList || []
 
 			const formData = new FormData();
@@ -343,7 +350,7 @@ export const useRobotStore = defineStore("robot-store", {
 				formData.append("ByGroup", groupList.length ? '1' : '0');
 			}
 
-			const results = await fetchGetDhQuery(formData);
+			const results = Number(ScreenType) === 1 ? await fetchGetDhQuery(formData) : await fetchGetKbqaQuery(formData);
 
 			record2.loading = false;
 			record2.loaded = true;
@@ -359,31 +366,42 @@ export const useRobotStore = defineStore("robot-store", {
 				return false;
 			}
 
-			if (!results.data) {
+			const resData: any = results.data
+
+			if (!resData) {
 				record2.isTipsReply = true;
 				record2.replyType = 2;
 				localStg.set("chatbotRecords", this.chatbotRecords);
 				return false;
 			}
 
-			const resData = results.data as Robot.RecordData;
+			let sourceData = [];
+			let sourceType = {};
 
-			const sourceData = resData?.sourceData || [];
-			const sourceType = resData?.sourceType || {};
+			if (Number(ScreenType) === 1) {
+				sourceData = resData?.sourceData || []
+				sourceType = resData?.sourceType || {}
+				record2.isDhReply = true
+				if (sourceData.length === 0) {
+					record2.replyType = 1;
+					record2.isTipsReply = true;
+					localStg.set("chatbotRecords", this.chatbotRecords);
+					return false;
+				}
 
-			if (sourceData.length === 0) {
-				record2.replyType = 1;
-				record2.isTipsReply = true;
-				localStg.set("chatbotRecords", this.chatbotRecords);
-				return false;
+				record2.data = {
+					sourceData,
+					sourceType,
+					sql: resData?.sql || "",
+					spss_reasoning: resData?.spss_reasoning || "",
+				};
+			} else if (Number(ScreenType) === 2) {
+				record2.isKbReply = true
+				record2.data = {
+					answer: resData?.answer,
+					chunks: resData?.chunks || [],
+				};
 			}
-
-			record2.data = {
-				sourceData,
-				sourceType,
-				sql: resData?.sql || "",
-				spss_reasoning: resData?.spss_reasoning || "",
-			};
 
 			localStg.set("chatbotRecords", this.chatbotRecords);
 			return true;

@@ -292,6 +292,7 @@ export default defineComponent({
 			isCollapsed.value = false;
 			robot.showRightContent = false;
 			robot.setShowCreate(false);
+			robot.setShowSettings(false);
 		};
 
 		const onContentScroll = (e: any) => {

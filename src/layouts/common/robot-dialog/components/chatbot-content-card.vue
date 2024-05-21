@@ -5,11 +5,23 @@
 		:class="{ reverse: item.userType === 1 }"
 	>
 		<div class="card-pic" :class="{ 'pd-2': item.userType === 2 }">
-			<img
-				v-if="item.userType === 2"
-				src="~@/assets/images/ai-pic.png"
-				alt=""
-			/>
+			<div v-if="item.userType === 2" class="robot-pic">
+				<img
+					v-if="Number(item.screenType) === 1"
+					src="~@/assets/images/data-wd.png"
+					alt=""
+				/>
+				<img
+					v-else-if="Number(item.screenType) === 2"
+					src="~@/assets/images/know-wd.png"
+					alt=""
+				/>
+				<img
+					v-else
+					src="~@/assets/images/ai-pic.png"
+					alt=""
+				/>
+			</div>
 			<icon-local-avatar v-else class="text-32px" />
 			<!-- <img v-else src="~@/assets/images/test.jpg" alt="" /> -->
 		</div>
@@ -49,51 +61,79 @@
 						<!-- 机器人回复 -->
 						<div v-if="item.userType === 2" class="results-content">
 							<div v-if="item.isWelcome" class="success-results">
-								<RobotReply :success="true" :type="item.replyType"/>
+								<RobotReply :success="true" :screen-type="item.screenType" :type="item.replyType"/>
 							</div>
 							<div v-else-if="item.isTipsReply" class="error-results">
-								<RobotReply :success="true" :type="item.replyType"/>
-								<div class="action-box">
-									<div class="action-box-left">
-										<div class="action-box-item" @click="handleSelect('copy', item)">
-											<n-icon class="evs-icon" size="12" style="margin-right: 4px;">
-												<CopyIcon />
-											</n-icon>
-											<span>复制</span>
+								<RobotReply :success="true" :screen-type="item.screenType" :type="item.replyType">
+									<template #action>
+										<div class="action-box">
+											<div class="action-box-left">
+												<div class="action-box-item" @click="handleSelect('copy', item)">
+													<n-icon class="evs-icon" size="12" style="margin-right: 4px;">
+														<CopyIcon />
+													</n-icon>
+													<span>复制</span>
+												</div>
+											</div>
 										</div>
-									</div>
-								</div>
+									</template>
+								</RobotReply>
+							</div>
+							<div v-else-if="item.isKbReply" class="success-results">
+								<RobotReplyKB>
+									<template #default>
+										<p>{{ item?.data?.answer }}</p>
+									</template>
+									<template #action>
+										<div class="action-box">
+											<div class="action-box-left">
+												<div class="action-box-item" @click="handleSelect('copy', item)">
+													<n-icon class="evs-icon" size="12" style="margin-right: 4px;">
+														<CopyIcon />
+													</n-icon>
+													<span>复制</span>
+												</div>
+											</div>
+										</div>
+									</template>
+								</RobotReplyKB>
 							</div>
 							<div v-else class="success-results">
-								<ChatCardChart :card-data="item" />
-								<div v-if="item?.data?.spss_reasoning" class="reasoning">
-									<n-divider style="margin-top: 8px;margin-bottom: 24px;" />
-									<p>{{ item?.data?.spss_reasoning }}</p>
-								</div>
-								<div class="action-box">
-									<div class="action-box-left">
-										<div class="action-box-item" @click="handleSelect('copy', item)">
-											<n-icon class="evs-icon" size="12" style="margin-right: 4px;">
-												<CopyIcon />
-											</n-icon>
-											<span>复制</span>
+								<RobotReplyDH>
+									<template #default>
+										<ChatCardChart :card-data="item" />
+										<div v-if="item?.data?.spss_reasoning" class="reasoning">
+											<n-divider style="margin-top: 8px;margin-bottom: 24px;" />
+											<p>{{ item?.data?.spss_reasoning }}</p>
 										</div>
-									</div>
-									<div class="action-box-right">
-										<div class="action-box-item mr-6px" @click="handleSelect('sql', item)">
-											<n-icon class="evs-icon" size="12" style="margin-right: 4px;">
-												<SqlIcon />
-											</n-icon>
-											<span>SQL查询</span>
+									</template>
+									<template #action>
+										<div class="action-box">
+											<div class="action-box-left">
+												<div class="action-box-item" @click="handleSelect('copy', item)">
+													<n-icon class="evs-icon" size="12" style="margin-right: 4px;">
+														<CopyIcon />
+													</n-icon>
+													<span>复制</span>
+												</div>
+											</div>
+											<div class="action-box-right">
+												<div class="action-box-item mr-6px" @click="handleSelect('sql', item)">
+													<n-icon class="evs-icon" size="12" style="margin-right: 4px;">
+														<SqlIcon />
+													</n-icon>
+													<span>SQL查询</span>
+												</div>
+												<div class="action-box-item" @click="handleSelect('chart', item)">
+													<n-icon class="evs-icon" size="12" style="margin-right: 4px;">
+														<KshIcon />
+													</n-icon>
+													<span>数据可视化</span>
+												</div>
+											</div>
 										</div>
-										<div class="action-box-item" @click="handleSelect('chart', item)">
-											<n-icon class="evs-icon" size="12" style="margin-right: 4px;">
-												<KshIcon />
-											</n-icon>
-											<span>数据可视化</span>
-										</div>
-									</div>
-								</div>
+									</template>
+								</RobotReplyDH>
 							</div>
 						</div>
 						<!-- <div class="action-footer">
@@ -136,6 +176,8 @@ import {
 import SvgIcon from '@/components/custom/svg-icon.vue';
 import RobotReply from './robot-reply/index.vue';
 import UserReply from './user-reply/index.vue';
+import RobotReplyKB from './robot-reply/kb.vue';
+import RobotReplyDH from './robot-reply/dh.vue';
 import type { Component } from "vue";
 import { NIcon } from "naive-ui";
 import { h, defineComponent } from "vue";
@@ -188,6 +230,8 @@ export default defineComponent({
 		ReloadIcon,
 		RobotReply,
 		UserReply,
+		RobotReplyDH,
+		RobotReplyKB,
 		KshIcon: () => {
 			return h(SvgIcon, { localIcon: 'ksh' })
 		},
@@ -265,7 +309,6 @@ export default defineComponent({
 	.card-pic {
 		flex: 0 0 32px;
 		margin-right: 10px;
-		background-color: #1890ff;
 		border-radius: 50%;
 		width: 32px;
 		height: 32px;
@@ -273,10 +316,18 @@ export default defineComponent({
 		&.pd-2 {
 			padding: 2px;
 		}
-		img {
+		.robot-box {
 			width: 100%;
 			height: 100%;
+			display: flex;
+			align-items: center;
+			justify-content: center;
 			border-radius: 50%;
+			overflow: hidden;
+			img {
+				max-width: 100%;
+				max-height: 100%;
+			}
 		}
 	}
 	.card-box {
@@ -346,10 +397,11 @@ export default defineComponent({
 					}
 					.action-box {
 						display: flex;
-						padding: 8px 12px;
+						// padding: 8px 12px;
 						background-color: #fff;
 						border-radius: 2px;
 						box-sizing: border-box;
+						margin-top: 10px;
 						.action-box-left {
 							flex: 1;
 							display: flex;

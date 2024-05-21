@@ -233,30 +233,30 @@
 							</n-collapse-transition>
 						</div>
 						<div v-if="Number(ScreenType) === 2">
-							<div class="mb-20px">
+							<!-- <div class="mb-23px flex justify-between" :class="{'mb-23px': !form.openkbset, 'mb-6px': form.openkbset}">
+								<span>配置知识库</span>
 								<n-switch v-model:value="form.openkbset" />
-								<span class="ml-10px">{{ form.openkbset ? '关闭' : '开启' }}知识库配置</span>
-							</div>
+							</div> -->
 							<n-form-item-row
-								v-if="form.openkbset"
+								v-show="form.openkbset"
+								label="配置知识库"
 								class="form-item-kb"
-								label="选择知识库与知识（最多可配置3个知识库）"
-								path="kbListVal"
 							>
-							<n-tree-select
-								multiple
-								cascade
-								checkable
-								check-strategy="all"
-								v-model:value="form.kbListVal"
-								:options="kbOpts"
-								@update:value="handleKbListUpdateValue"
-							/>
+								<n-tree-select
+									multiple
+									cascade
+									checkable
+									clearable
+									check-strategy="all"
+									v-model:value="form.kbListVal"
+									:options="kbOpts"
+									@update:value="handleKbListUpdateValue"
+								/>
 							</n-form-item-row>
-							<n-form-item-row v-if="form.openkbset" label="最大召回的个数（1-6）" path="RelevantHits">
+							<n-form-item-row label="最大召回的个数" path="RelevantHits">
 								<n-input-number v-model:value="form.RelevantHits" style="width: 600px;" :min="1" :max="6" />
 							</n-form-item-row>
-							<n-form-item-row v-if="form.openkbset" label="相似度羽化值（0-100）" path="SimilarityThreshold">
+							<n-form-item-row label="相似度阈值" path="SimilarityThreshold">
 								<n-input-number v-model:value="form.SimilarityThreshold" style="width: 600px;" :min="0" :max="100" />
 							</n-form-item-row>
 						</div>
@@ -365,7 +365,7 @@ export default defineComponent({
 			groupList: [] as Robot.GroupList[],
 			RelevantHits: 4,
 			SimilarityThreshold: 0,
-			kbListVal: ['da2b38e'],
+			kbListVal: [] as string[],
 			openkbset: true
 		});
 
@@ -424,7 +424,6 @@ export default defineComponent({
 				}
 				options.push(obj)
 			}
-			console.log('options-----', options)
 			return options
 		}
 
@@ -908,12 +907,9 @@ export default defineComponent({
 					};
 				}) || [];
 
-
 			submitLoading.value = true;
 
 			const kbids = handleKBIDS()
-
-			console.log('kbids------fasf', kbids)
 
 			const params = {
 				ScreenId: robot.chatbotId,
@@ -923,9 +919,9 @@ export default defineComponent({
 				ConfigName: form.configName,
 				ScreenType: Number(chatbotItem.ScreenType),
 				GroupList: groupList,
-				SimilarityThreshold: form.SimilarityThreshold,
-				RelevantHits: form.RelevantHits,
-				KBIDS: handleKBIDS()
+				SimilarityThreshold: Number(form.SimilarityThreshold),
+				RelevantHits: Number(form.RelevantHits),
+				KBIDS: kbids
 			}
 
 			const results = await robot.updateChatbot(params)
@@ -984,12 +980,6 @@ export default defineComponent({
 					type: 'number',
 					trigger: ["blur", "input"],
 					message: "不能为空",
-				},
-				kbListVal: {
-					required: true,
-					type: 'array',
-					trigger: ["blur", "input"],
-					message: "请选择"
 				}
 			},
 			confirmBtnName,

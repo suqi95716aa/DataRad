@@ -65,6 +65,7 @@ declare namespace Robot {
 	/* 会话记录 */
 	interface Record {
 		id: string; // 会话记录id
+		screenType: number, // 场景类型
 		userType: number; // 1 用户 2 机器人
 		value: string; // 输入的文本内容
 		datetime: string | number; // 日期时间
@@ -72,7 +73,9 @@ declare namespace Robot {
 		loaded: boolean; // 加载完成
 		isWelcome?: boolean; // 是否回复欢迎语
 		isTipsReply?: boolean; // 是否回复提示
-		replyType?: number, // 回复类型 0 问候语 1 错误提示语 2 未配置提示语
+		replyType?: number; // 回复类型 0 问候语 1 错误提示语 2 未配置提示语
+		isKbReply?: boolean; // 知识库问答回复
+		isDhReply?: boolean; // 数据助手问答回复
 		/**
 		 * 状态 0 未发送 1 发送成功 -1 发送失败 -2 加载失败
 		 */
@@ -83,10 +86,12 @@ declare namespace Robot {
 	}
 
 	interface RecordData {
-		sourceData: SourceData[];
-		sourceType: SourceType;
+		sourceData?: SourceData[];
+		sourceType?: SourceType;
 		sql?: string;
 		spss_reasoning?: string;
+		answer?: string;
+		chunks?: Chunks[];
 	}
 
 	interface SourceData {
@@ -95,6 +100,11 @@ declare namespace Robot {
 
 	interface SourceType {
 		[key: string]: any;
+	}
+
+	interface Chunks {
+		page_content: string;
+		score: number;
 	}
 
 
