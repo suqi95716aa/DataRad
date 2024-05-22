@@ -1,4 +1,4 @@
-import { localStg } from '@/utils';
+import { localStg } from "@/utils";
 
 export interface ChatbotResData {
 	ScreenDesc: string;
@@ -9,23 +9,22 @@ export interface ChatbotResData {
 	UpdateTime: string;
 }
 
-
 export function getChatbotList() {
-	const chatbotList: Robot.Chatbot[] = localStg.get('chatbotList') as Robot.Chatbot[];
+	const chatbotList: Robot.Chatbot[] =
+		localStg.get("chatbotList") || ([] as Robot.Chatbot[]);
 	return chatbotList;
 }
 
 export function getChatbotRecords() {
-	const records = localStg.get('chatbotRecords') as Robot.Records[];
+	const records = localStg.get("chatbotRecords") || ([] as Robot.Records[]);
 	return records;
 }
 
 export function getActiveChatbotId() {
-	const id = localStg.get('chatbotId') as string;
+	const id = localStg.get("chatbotId") || ("" as string);
 	return id;
 }
 
-
 export function clearRobotStorage() {
-  localStg.remove('chatbotList');
+	localStg.remove("chatbotList");
 }

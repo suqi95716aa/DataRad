@@ -111,6 +111,7 @@ export default defineComponent({
 			if (fIndex !== -1) {
 				res = robot.chatbotRecords[fIndex].list
 			}
+
 			return res
 		})
 
@@ -143,7 +144,6 @@ export default defineComponent({
 		}
 
 		const handleCardSelect = (key: string, item: any) => {
-			console.log("key----", key);
 			switch(key) {
 				case 'copy':
 					navigator.clipboard.writeText(item.value)
@@ -152,7 +152,7 @@ export default defineComponent({
 		};
 
 		const getImgName = (): string => {
-			const name = robot.chatbotItem.name || ''
+			const name = robot.chatbotItem.screenName || ''
 			const datetime = moment().format('YYYYMMDDHHmmss')
 			return `${name}-${datetime}.png`
 		}

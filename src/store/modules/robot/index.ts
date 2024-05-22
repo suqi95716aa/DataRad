@@ -274,6 +274,36 @@ export const useRobotStore = defineStore("robot-store", {
 			this.chatbotId = id;
 			localStg.set("chatbotId", id);
 		},
+		/* 检测当前会话记录是否为空，为空，则添加一条欢迎提示语 */
+		checkCurChatbotRecordBeEmpty() {
+			const screenType = this.chatbotItem.ScreenType
+			const welcomeReply = {
+				id: nanoid(),
+				screenType: Number(screenType), // 场景类型
+				userType: 2, // 1 用户 2 机器人
+				value: "", // 输入的文本内容
+				datetime: moment().format("YYYY/MM/DD HH:mm:ss"), // 日期时间
+				isWelcome: true,
+				replyType: 0,
+				state: 1,
+				type: 0,
+				loaded: true,
+				loading: false,
+				data: {} as Robot.RecordData,
+			};
+
+			const fIndex = this.chatbotRecords.findIndex(
+				(item) => item.id === this.chatbotId
+			);
+
+			if (fIndex === -1 && this.chatbotId) {
+				this.chatbotRecords.push({
+					id: this.chatbotId || "",
+					list: [welcomeReply],
+				});
+				localStg.set("chatbotRecords", this.chatbotRecords);
+			}
+		},
 		/* 添加一条聊天记录*/
 		async addChatbotRecord(params: RecordParamsType) {
 			const { userInfo } = useAuthStore();

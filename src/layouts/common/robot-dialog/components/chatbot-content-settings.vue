@@ -241,6 +241,46 @@
 								v-show="form.openkbset"
 								label="配置知识库"
 								class="form-item-kb"
+								:show-feedback="false"
+							>
+								<template #label>
+									<div class="f-label flex justify-between">
+										<div class="f-label-left">
+											<span class="mr-10"
+												>配置知识库</span
+											>
+										</div>
+										<div class="f-label-right">
+											<n-button strong secondary circle size="small" type="info" :disabled="form.selectKbList.length >= kbMax" @click="addKbClick">
+												<template #icon>
+													<n-icon><AddOutlineIcon /></n-icon>
+												</template>
+											</n-button>
+										</div>
+									</div>
+								</template>
+								<div class="kb-wrapper">
+									<div v-for="(item, index) in form.selectKbList" :key="item.id" class="kb-list">
+										<div class="kb-list-left">
+											<n-form-item :path="`selectKbList[${index}].value`">
+												<n-select v-model:value="item.value" :options="item.options" placeholder="请选择" clearable :on-update:show="(show: boolean) => onUpdateShow(show, index)" />
+											</n-form-item>
+										</div>
+										<div class="kb-list-action">
+											<n-button v-show="form.selectKbList.length > 1" strong secondary circle size="small" type="error" @click="delKbClick(index)">
+												<template #icon>
+													<n-icon><RemoveOutlineIcon /></n-icon>
+												</template>
+											</n-button>
+										</div>
+									</div>
+								</div>
+
+							</n-form-item-row>
+							<!-- <n-form-item-row
+								v-show="form.openkbset"
+								label="配置知识库"
+								class="form-item-kb"
 							>
 								<n-tree-select
 									multiple
@@ -252,7 +292,7 @@
 									:options="kbOpts"
 									@update:value="handleKbListUpdateValue"
 								/>
-							</n-form-item-row>
+							</n-form-item-row> -->
 							<n-form-item-row label="最大召回的个数" path="RelevantHits">
 								<n-input-number v-model:value="form.RelevantHits" style="width: 600px;" :min="1" :max="6" />
 							</n-form-item-row>
@@ -335,7 +375,7 @@ import {
 	computed,
 	onMounted
 } from "vue";
-import { TreeSelectOption } from 'naive-ui';
+import { TreeSelectOption, SelectOption } from 'naive-ui';
 import { useRobotStore, useAuthStore, useKnowledgeStore } from "@/store";
 import { EventBus } from "@/utils";
 
@@ -366,8 +406,18 @@ export default defineComponent({
 			RelevantHits: 4,
 			SimilarityThreshold: 0,
 			kbListVal: [] as string[],
-			openkbset: true
+			openkbset: true,
+			selectKbList: [
+				{
+					id: nanoid(),
+					value: null,
+					options: [] as SelectOption[]
+				}
+			]
 		});
+		const kbOpts = ref<TreeSelectOption[]>([])
+		const selectKbOpts = ref<SelectOption[]>([])
+
 
 		const auth = useAuthStore();
 		const robot = useRobotStore();
@@ -427,8 +477,25 @@ export default defineComponent({
 			return options
 		}
 
-		const kbOpts = ref<TreeSelectOption[]>([])
+		const getSelectKbOpts = () => {
+			const kbList = knowledge.knowledgeBaseList || []
+			const options: TreeSelectOption[] = []
+			for(let i = 0; i < kbList.length; i++) {
+				const obj: TreeSelectOption  = {
+					label: kbList[i].KBName,
+					value: kbList[i].KBID
+				}
+				options.push(obj)
+			}
+			return options
+		}
+
+		selectKbOpts.value = getSelectKbOpts()
 		kbOpts.value = getKbOpts()
+
+		form.selectKbList.forEach(item => {
+			item.options = selectKbOpts.value
+		})
 
 		const confirmBtnName = computed(() => {
 			let res = '保存'
@@ -471,8 +538,6 @@ export default defineComponent({
 
 		const setChatbotSettings = (type: number = 1) => {
 			const settings = JSON.parse(JSON.stringify(robot.chatbotSettings));
-			console.log('settings-----aaa', settings)
-			console.log('ScreenType-----', ScreenType.value)
 			// const settings: Robot.Settings = robot.chatbotSettings
 			const ScreenQAConfig = settings.ScreenQAConfig || ({} as Robot.ScreenQAConfig)
 
@@ -537,21 +602,29 @@ export default defineComponent({
 		// methods
 		const getResKBIDS = (list: any) => {
 			let res: string[] = []
-			if (Array.isArray(list)) {
-				list.forEach(item => {
-					const keys = Object.keys(item)
-					keys.forEach(k => {
-						res.push(k)
-						const children = item[k] || []
-						if (children) {
-							children.forEach((c: any) => {
-								const keys = Object.keys(c) || []
-								res.push(...keys)
-							})
-						}
-					})
-				})
-			}
+			// if (Array.isArray(list)) {
+			// 	list.forEach(item => {
+			// 		const keys = Object.keys(item)
+			// 		keys.forEach(k => {
+			// 			res.push(k)
+			// 			const children = item[k] || []
+			// 			if (children) {
+			// 				children.forEach((c: any) => {
+			// 					const keys = Object.keys(c) || []
+			// 					res.push(...keys)
+			// 				})
+			// 			}
+			// 		})
+			// 	})
+			// }
+
+			res = list && list.map((val: any) => {
+				return {
+					id: nanoid(),
+					value: val,
+					options: selectKbOpts.value
+				}
+			}) || []
 
 			return res
 		}
@@ -857,6 +930,45 @@ export default defineComponent({
 			return parents
 		}
 
+		const addKbClick = () => {
+			let len = form.selectKbList.length
+			if (len >= kbMax.value) return
+			form.selectKbList.push({
+				id: nanoid(),
+				value: null,
+				options: selectKbOpts.value
+			})
+		}
+
+		const delKbClick = (index: number) => {
+			let len = form.selectKbList.length
+			if (len <= 1) return
+			form.selectKbList.splice(index, 1)
+		}
+
+		const onUpdateShow = (show: boolean, index: number) => {
+			if (show) {
+				let selected: any = []
+				let list = form.selectKbList
+				let listItem = list[index] || {}
+				let options: SelectOption[] = listItem.options || ([] as SelectOption[])
+				for (let i = 0; i < list.length; i++) {
+					const item = list[i] || {}
+					if (item.value && index !== i) {
+						selected.push(item.value)
+					}
+				}
+
+				options.forEach((item) => {
+					if (selected.includes(item.value)) {
+						item.disabled = true
+					} else {
+						item.disabled = false
+					}
+				})
+			}
+		}
+
 		const addSubmit = async () => {
 			const groupList = form.groupList.map((item) => {
 				return {
@@ -909,7 +1021,8 @@ export default defineComponent({
 
 			submitLoading.value = true;
 
-			const kbids = handleKBIDS()
+			// const kbids = handleKBIDS()
+			const kbids = form.selectKbList.map(v => v.value) || []
 
 			const params = {
 				ScreenId: robot.chatbotId,
@@ -919,7 +1032,7 @@ export default defineComponent({
 				ConfigName: form.configName,
 				ScreenType: Number(chatbotItem.ScreenType),
 				GroupList: groupList,
-				SimilarityThreshold: Number(form.SimilarityThreshold),
+				SimilarityThreshold: form.SimilarityThreshold ? Number(form.SimilarityThreshold / 100) : 0,
 				RelevantHits: Number(form.RelevantHits),
 				KBIDS: kbids
 			}
@@ -946,8 +1059,10 @@ export default defineComponent({
 			submitLoading,
 			ScreenType,
 			form,
+			kbMax,
 			sourceOpts,
 			kbOpts,
+			selectKbOpts,
 			rules: {
 				name: {
 					required: true,
@@ -994,7 +1109,10 @@ export default defineComponent({
 			onUpdateShowSheetSelect,
 			getFieldOpts,
 			selectFieldChange,
-			handleKbListUpdateValue
+			handleKbListUpdateValue,
+			addKbClick,
+			delKbClick,
+			onUpdateShow
 		};
 	},
 });
@@ -1046,6 +1164,12 @@ export default defineComponent({
 				}
 
 				.form-item-group {
+					:deep(.n-form-item-label__text) {
+						width: 100%;
+					}
+				}
+
+				.form-item-kb {
 					:deep(.n-form-item-label__text) {
 						width: 100%;
 					}

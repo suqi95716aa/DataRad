@@ -266,6 +266,7 @@ export default defineComponent({
 
 		const onAfterEnter = () => {
 			chatbotScrollTo('bom', 'auto')
+			robot.checkCurChatbotRecordBeEmpty()
 			// robot.checkChatbotSettings()
 			EventBus.on('chatbot-content-scroll-to', (res: any) => {
 				chatbotScrollTo(res?.type, res?.behavior)
@@ -422,7 +423,7 @@ export default defineComponent({
 .n-modal {
 	.n-card-header {
 		background-color: #f5f5f6;
-		border-bottom: 1px solid #bfbfbf;
+		// border-bottom: 1px solid #bfbfbf;
 	}
 
 	.n-card__content {
@@ -431,7 +432,7 @@ export default defineComponent({
 	}
 
 	.n-layout-sider__border {
-		background-color: #bfbfbf !important;
+		// background-color: #bfbfbf !important;
 	}
 }
 </style>

@@ -186,6 +186,7 @@ export default defineComponent({
 					moreRef.value[cIndex].setShow(false);
 					robot.setChatbotId(item.ScreenId);
 					robot.setShowSettings(true);
+					robot.checkCurChatbotRecordBeEmpty();
 					break;
 				case "del":
 					robot.delChatbot(item.ScreenId);
@@ -229,6 +230,7 @@ export default defineComponent({
 			EventBus.emit("back-bom");
 			robot.setShowCreate(false);
 			robot.setShowSettings(false);
+			robot.checkCurChatbotRecordBeEmpty();
 			// robot.checkChatbotSettings();
 		};
 
