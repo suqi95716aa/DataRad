@@ -82,7 +82,25 @@
 							<div v-else-if="item.isKbReply" class="success-results">
 								<RobotReplyKB>
 									<template #default>
-										<p>{{ item?.data?.answer }}</p>
+										<div class="data-source">
+											<p class="data-source-answer">{{ item?.data?.answer }}</p>
+											<div class="data-source-chunks mt-10px">
+												<n-collapse arrow-placement="right">
+													<n-collapse-item :title="`找到了${item?.data?.chunks?.length}个信息来源：`" name="1">
+														<div class="chunks-content">
+															<n-collapse arrow-placement="right">
+																<n-collapse-item class="collapse-item-inner" v-for="(chunk, cIndex) in item?.data?.chunks" :key="cIndex" :title="`数据来源${Number(cIndex) + 1}：`" :name="Number(cIndex) + 1">
+																	<div class="pl-0px">
+																		<p class="p-text">{{ chunk?.page_content }}</p>
+																		<p class="mt-10px" style="color: #1890ff;">相关性：{{ chunk?.score }}</p>
+																	</div>
+																</n-collapse-item>
+															</n-collapse>
+														</div>
+													</n-collapse-item>
+												</n-collapse>
+											</div>
+										</div>
 									</template>
 									<template #action>
 										<div class="action-box">
@@ -247,7 +265,7 @@ export default defineComponent({
 			},
 		},
 	},
-	setup() {
+	setup(props) {
 		const robot = useRobotStore();
 
 		const handleSelect = (key: string, item: any) => {
@@ -386,6 +404,24 @@ export default defineComponent({
 								color: #1890ff;
 								text-decoration: underline;
 								margin: 0 2px;
+							}
+						}
+
+						.data-source {
+							.data-source-answer {}
+							.data-source-chunks {
+								.chunks-content {
+									// padding-left: 20px;
+									.collapse-item-inner {
+										margin-left: 0px;
+										:deep(.n-collapse-item__header-main) {
+											color: #1890ff;
+											.n-base-icon {
+												color: #1890ff;
+											}
+										}
+									}
+								}
 							}
 						}
 					}

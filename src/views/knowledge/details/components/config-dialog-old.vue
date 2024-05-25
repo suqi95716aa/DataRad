@@ -42,7 +42,7 @@
 						<div class="file-list mt-20">
 							<div class="file-item" v-for="(item, index) in fileList" :key="item.id">
 								<div class="item-left">
-									<img src="@/assets/images/xlsx.png" />
+									<img src="@/assets/images/file-type-xlsx.png" />
 								</div>
 								<div class="item-mid">
 									<p style="font-size: 14px;">{{ item.name }}</p>
@@ -115,7 +115,7 @@
 					<div class="file-list k-list">
 						<div class="file-item" v-for="(item, index) in fileList" :key="item.id">
 							<div class="item-left">
-								<img src="@/assets/images/xlsx.png" />
+								<img src="@/assets/images/file-type-xlsx.png" />
 							</div>
 							<div class="item-mid">
 								<p style="font-size: 14px;">{{ item.name }}</p>

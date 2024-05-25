@@ -2,6 +2,7 @@
 	<n-modal
 		preset="card"
 		:title="title"
+		class="robot-dialog"
 		content-class="modal-content"
 		header-extra-class="header-extra"
 		:show="app.robotDialogVisible"
@@ -38,7 +39,7 @@
 				</div>
 				<div v-if="configName" class="data-title">
 					<p>数据源：</p>
-					<img class="mr-8px" src="@/assets/images/xlsx.png" alt="" />
+					<img class="mr-8px" src="@/assets/images/file-type-xlsx.png" alt="" />
 					<p class="file-name">{{ configName }}</p>
 				</div>
 			</div>
@@ -420,7 +421,7 @@ export default defineComponent({
 		}
 	}
 }
-.n-modal {
+.robot-dialog {
 	.n-card-header {
 		background-color: #f5f5f6;
 		// border-bottom: 1px solid #bfbfbf;

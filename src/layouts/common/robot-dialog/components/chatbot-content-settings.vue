@@ -516,6 +516,7 @@ export default defineComponent({
 		})
 
 		onMounted(() => {
+			console.log('zzzzz')
 			setChatbotSettings(2);
 			EventBus.on("init-chatbot-settings", () => {
 				init();
@@ -564,10 +565,26 @@ export default defineComponent({
 				isNotConfig.value = true;
 			}
 
-			if (ScreenType.value === '2') {
+			console.log('ScreenType.value-----aa', ScreenType.value)
+
+			if (Number(ScreenType.value) === 2) {
 				form.RelevantHits = Number(ScreenQAConfig.RelevantHits)
 				form.SimilarityThreshold = Number(ScreenQAConfig.SimilarityThreshold)
-				form.kbListVal = getResKBIDS(ScreenQAConfig.KBIDS)
+				console.log('ScreenQAConfig.KBIDS----aa', ScreenQAConfig.KBIDS)
+				const kbids: string[] = typeof ScreenQAConfig.KBIDS === 'string' ? JSON.parse(ScreenQAConfig.KBIDS) : (ScreenQAConfig.KBIDS || [])
+				form.selectKbList = getResKBIDS(kbids)
+
+				if (kbids.length > 0) {
+					form.selectKbList = getResKBIDS(kbids)
+				} else {
+					form.selectKbList = [
+						{
+							id: nanoid(),
+							value: null,
+							options: selectKbOpts.value as SelectOption[]
+						}
+					]
+				}
 			}
 		};
 
@@ -600,8 +617,8 @@ export default defineComponent({
 		);
 
 		// methods
-		const getResKBIDS = (list: any) => {
-			let res: string[] = []
+		const getResKBIDS = (list: string[] = []) => {
+			let res = []
 			// if (Array.isArray(list)) {
 			// 	list.forEach(item => {
 			// 		const keys = Object.keys(item)

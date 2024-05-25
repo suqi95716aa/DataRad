@@ -1,7 +1,5 @@
 import { request, mockRequest } from '../request';
 
-const baseURL = import.meta.env.DEV ? '/api' : ''
-
 interface ConfigInfo {
 	[key: string]: any
 }
@@ -19,7 +17,7 @@ export function fetchSmsCode(phone: string) {
  * 注册
  */
 export function fetchRegister(data: FormData) {
-	return request.post(`${baseURL}/user/add`, data)
+	return request.post(`/user/add`, data)
 }
 
 /**
@@ -32,7 +30,7 @@ export function fetchRegister(data: FormData) {
 // }
 export function fetchLogin(data: FormData) {
   // return mockRequest.post<ApiAuth.Token>('/login', { userName, password });
-	return request.post(`${baseURL}/user/login`, data)
+	return request.post(`/user/login`, data)
 }
 
 /** 获取用户信息 */
@@ -59,15 +57,15 @@ export function fetchUpdateToken(refreshToken: string) {
 
 /** 获取用户数据源配置信息 */
 export function fetchUserConfigInfo (data: any): Promise<ConfigInfo> {
-	return request.post(`${baseURL}/config/get`, data);
+	return request.post(`/config/get`, data);
 }
 
 /* 获取用户数据源对应的表数据 */
 export async function fetchGetConfigData(data: FormData) {
-  return request.post(`${baseURL}/config/data`, data);
+  return request.post(`/config/data`, data);
 }
 
 /* 获取用户场景 */
 export function fetchGetScreenList(data: FormData) {
-	return request.post(`${baseURL}/screen/list`, data)
+	return request.post(`/screen/list`, data)
 }

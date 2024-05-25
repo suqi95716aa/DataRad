@@ -2,7 +2,7 @@
 	<n-modal
 		v-model:show="showModal"
 		style="width: 1080px; position: fixed; top: 10vh"
-		title="知识点预览"
+		title="知识预览"
 		:show-icon="false"
 		preset="card"
 	>
@@ -35,7 +35,7 @@
 							</div>
 						</div>
 						<div class="list-item_bom">
-							<span>{{ item.text ? item.text?.length : 0 }} 字</span>
+							<span>{{ item?.text ? item?.text?.length : 0 }} 字</span>
 						</div>
 					</div>
 				</div>
@@ -58,14 +58,14 @@
 		</div>
 		<n-modal
 			v-model:show="showInnerModal"
-			style="width: 500px; height: 800px; overflow-y: auto; position: fixed; top: 10vh"
+			style="width: 500px; height: 800px; position: fixed; top: 10vh"
 			class="custom-card"
 			preset="card"
 			size="huge"
 			:bordered="false"
 		>
 			<div class="content">
-				<p>{{ text }}</p>
+				<p style="white-space: pre-wrap;">{{ text }}</p>
 			</div>
 		</n-modal>
 	</n-modal>
@@ -95,7 +95,7 @@ export default defineComponent({
 		const total = ref(0);
 		const pageSize = ref(20);
 		const currentPage = ref(1);
-		const pageList = ref<Knowledge.KDetails[]>([]);
+		const pageList = ref<Knowledge.Chunks_info[]>([]);
 		const info = ref<infoType>();
 		const text = ref('');
 
@@ -122,15 +122,14 @@ export default defineComponent({
 			}
 
 			loading.value = true;
-			const results = await knowledge.getKDetails(params);
+
+			const results: Knowledge.KDetails = await knowledge.getKDetails(params);
 			loading.value = false;
 			loaded.value = true;
 
-			console.log('results----', results)
-
 			if (results) {
 				total.value = results.total;
-				pageList.value = results.chunks_info;
+				pageList.value = results.chunks_info as Knowledge.Chunks_info[];
 			}
 		}
 
@@ -172,7 +171,7 @@ export default defineComponent({
 }
 .dialog-content {
 	flex: 1;
-	overflow: auto;
+	overflow: hidden;
 }
 .loading-box {
 	width: 100px;
@@ -237,15 +236,15 @@ export default defineComponent({
 		border-bottom: 1px solid rgb(239, 239, 245);
 	}
 	.n-card__content {
-		padding: 10px;
+		padding: 0 10px;
+		overflow-y: auto;
 		.content {
+			padding: 10px 0;
 			line-height: 22px;
 			word-wrap:break-word;
 			word-break:break-all;
 			overflow-y: auto;
     	height: 100%;
-			padding: 10px;
-			padding-top: 0;
 			box-sizing: border-box;
 		}
 	}

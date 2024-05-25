@@ -15,9 +15,7 @@
 					<n-radio-group v-model:value="kType" :disabled="fileList.length > 0" name="radiogroup">
 						<div class="type-list">
 							<div class="type-item">
-								<n-icon size="28" :depth="3">
-									<icon-local-k-type1 />
-								</n-icon>
+								<img src="@/assets/images/subsection-type1.png" :style="{'opacity': fileList.length > 0 ? 0.4 : 1}" alt="" />
 								<div class="type-item-info">
 									<p>直接分段</p>
 									<p>选择文本文件，将其分块进行处理</p>
@@ -25,9 +23,7 @@
 								<n-radio :value="1" />
 							</div>
 							<div class="type-item">
-								<n-icon size="32" :depth="3">
-									<icon-local-k-type2 />
-								</n-icon>
+								<img src="@/assets/images/subsection-type2.png" :style="{'opacity': fileList.length > 0 ? 0.4 : 1}" alt="" />
 								<div class="type-item-info">
 									<p>特定类型标题分段</p>
 									<p>将具有预设标题样式的知识进行分段</p>
@@ -35,9 +31,7 @@
 								<n-radio :value="2" />
 							</div>
 							<div class="type-item">
-								<n-icon size="32" :depth="3">
-									<icon-local-k-type3 />
-								</n-icon>
+								<img src="@/assets/images/subsection-type4.png" :style="{'opacity': fileList.length > 0 ? 0.4 : 1}" alt="" />
 								<div class="type-item-info">
 									<p>自定义类型标题分段</p>
 									<p>将具有自定义标题样式的知识进行分段</p>
@@ -45,9 +39,7 @@
 								<n-radio :value="3" />
 							</div>
 							<div class="type-item">
-								<n-icon size="36" :depth="3">
-									<icon-local-k-type4 />
-								</n-icon>
+								<img src="@/assets/images/subsection-type3.png" :style="{'opacity': fileList.length > 0 ? 0.4 : 1}" alt="" />
 								<div class="type-item-info">
 									<p>表格类型分段</p>
 									<p>将具有结构化表格信息分段</p>
@@ -101,7 +93,8 @@
 									/>
 								</div>
 								<div class="item-left">
-									<img src="@/assets/images/xlsx.png" />
+									<FileTypeIcon :type="getFileType(item.file)" :size="36" />
+									<!-- <img src="@/assets/images/8.png" /> -->
 								</div>
 								<div class="item-mid">
 									<p style="font-size: 14px;">{{ item.name }}</p>
@@ -126,7 +119,7 @@
 								size="small"
 							>
 								<n-form-item v-if="[1].includes(kType)" label="分块长度" path="size">
-									<n-input-number v-model:value="formVal.size" :min="1000" :max="2000" />
+									<n-input-number v-model:value="formVal.size" :min="1000" :max="3000" />
 									<n-popover trigger="hover">
 										<template #trigger>
 											<n-icon size="20" style="margin-left: 10px;cursor: pointer;" color="#8d8e99">
@@ -236,12 +229,13 @@ import {
 	EllipsisVerticalOutline as EllipsisIcon
 } from "@vicons/ionicons5";
 import KTemplate from './k-template.vue';
+import FileTypeIcon from '@/components/common/file-type-icon.vue';
 import { ref, computed, defineComponent } from 'vue';
 import { useRoute } from "vue-router";
 import type { UploadFileInfo, FormInst, FormItemRule, StepsProps } from "naive-ui";
 import { useMessage } from 'naive-ui';
 import { useAuthStore, useKnowledgeStore } from '@/store';
-import { fetchPreviewsUploadKnowledge } from '@/service';
+import { fetchPreviewsUploadKnowledge, fetchGetFsUrl } from '@/service';
 import { REGEXP_URL } from '@/config';
 
 let splitTypeOpts = [
@@ -266,7 +260,8 @@ export default defineComponent({
 		CloudUploadIcon,
 		TrashIcon,
 		EllipsisIcon,
-		KTemplate
+		KTemplate,
+		FileTypeIcon
 	},
 	emits: ['change'],
 	setup(props, ctx) {
@@ -366,7 +361,6 @@ export default defineComponent({
 		};
 
 		const onAfterLeaveDialog = () => {
-			console.log('onAfterLeaveDialog-----')
 			formVal.value.size = 2000
 			formVal.value.overlap = 100
 			formVal.value.delimiter = ','
@@ -464,7 +458,23 @@ export default defineComponent({
 			console.log('onBeforeUpload-----options', options)
 		}
 
+		const getFileType = (file: any) => {
+			let res: string = ''
+			let name = file.name || ''
+			let list = ['md', 'doc', 'txt', 'pdf', 'xlsx', 'csv', 'docx']
+			let arr = name.split('.') || []
+			let len = arr.length
+			let type = arr[len - 1] || ''
+
+			if (list.includes(type)) {
+				res = type
+			}
+
+			return res
+		}
+
 		const countFileSize = (file: any) => {
+			console.log('file----aa', file)
 			if (!file) {
 				return '-'
 			}
@@ -495,9 +505,25 @@ export default defineComponent({
 			await knowledge.removePreviewsK(params)
 		}
 
-		const previewFileClick = (file: any) => {
+		const previewFileClick = async (file: any) => {
 			// const url = URL.createObjectURL(file)
-			// window.open('https://view.officeapps.live.com/op/view.aspx?src=' + url)
+
+			console.log('file----', file)
+			const formData = new FormData()
+			formData.append('Uid', userInfo.userId)
+			formData.append('Service', '2')
+			formData.append('FileName', file.name)
+			formData.append('KBID', '')
+			const results = await fetchGetFsUrl(formData)
+
+			const resData: any = results.data || {}
+
+			console.log('results-----aaa', results)
+			const url = resData.url
+			console.log('url------faf', url)
+			// window.open(`https://view.officeapps.live.com/op/view.aspx?src=${url}`)
+			window.open(`https://view.officeapps.live.com/op/view.aspx?src=https://view.xdocin.com/8-134-201-130-19000_9t2vqeo.htm`)
+			// window.open(`https://view.xdocin.com/view?src=https://view.xdocin.com/8-134-201-130-19000_9t2vqeo.htm`)
 		}
 
 		const addUrlClick = () => {
@@ -690,7 +716,8 @@ export default defineComponent({
 			cancelClick,
 			resetUploadFileClick,
 			previewsKClick,
-			saveClick
+			saveClick,
+			getFileType
 		}
 	}
 })
@@ -748,6 +775,9 @@ export default defineComponent({
 				margin-right: 20px;
 				&:last-child {
 					margin-right: 0;
+				}
+				img {
+					width: 30px;
 				}
 				.type-item-info {
 					flex: 1;

@@ -32,7 +32,6 @@ export function getServiceEnvConfig(env: ImportMetaEnv): ServiceEnvConfigWithPro
   return {
     ...config,
     proxyPattern: '/proxy-pattern',
-		proxyPattern2: '/api',
-		proxyPattern3: '/kbapi'
+		proxyPattern2: '/api'
   };
 }

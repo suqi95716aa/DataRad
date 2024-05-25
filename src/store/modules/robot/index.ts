@@ -389,7 +389,9 @@ export const useRobotStore = defineStore("robot-store", {
 				const code = results.error.code;
 				record2.replyType = 1;
 				if (code === 400) {
-					record2.replyType = 2;
+					if (Number(ScreenType) === 1) {
+						record2.replyType = 2;
+					}
 				}
 				record2.isTipsReply = true;
 				localStg.set("chatbotRecords", this.chatbotRecords);
@@ -400,7 +402,7 @@ export const useRobotStore = defineStore("robot-store", {
 
 			if (!resData) {
 				record2.isTipsReply = true;
-				record2.replyType = 2;
+				record2.replyType = 1;
 				localStg.set("chatbotRecords", this.chatbotRecords);
 				return false;
 			}

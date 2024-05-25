@@ -196,7 +196,7 @@ export default defineComponent({
 				});
 			}
 			total.value = list.length;
-			pageList.value = list.slice((currentPage.value - 1) * pageSize.value, currentPage.value * pageSize.value);
+			pageList.value = list.slice((currentPage.value - 1) * pageSize.value, currentPage.value * pageSize.value) || [];
 			loading.value = false;
 			loaded.value = true;
 		};

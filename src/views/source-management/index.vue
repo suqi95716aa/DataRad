@@ -64,7 +64,7 @@
 							<div class="list-item_top">
 								<div class="info">
 									<div class="info-left">
-										<img src="@/assets/images/xlsx.png" alt="" />
+										<img src="@/assets/images/file-type-xlsx.png" alt="" />
 									</div>
 									<div class="info-right">
 										<n-ellipsis class="i-title" style="max-width: 200px">

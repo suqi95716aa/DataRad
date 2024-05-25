@@ -53,9 +53,11 @@ export const useKnowledgeStore = defineStore("knowledge-store", {
 
 			if (results.error) return false;
 
-			const obj = results.data as Knowledge.Base;
-			this.knowledgeBaseList.unshift(obj);
-			localStg.set("knowledgeBaseList", this.knowledgeBaseList);
+			const resData = results.data as Knowledge.Base;
+			if (resData) {
+				this.knowledgeBaseList.unshift(resData);
+				localStg.set("knowledgeBaseList", this.knowledgeBaseList);
+			}
 			return true;
 		},
 		// 更新知识库
@@ -193,19 +195,22 @@ export const useKnowledgeStore = defineStore("knowledge-store", {
 		async getKDetails(params: any) {
 			const { userInfo } = useAuthStore();
 			const formData = new FormData();
-			let resList = [] as Knowledge.KDetails[];
+			let resObj = {
+				total: 0,
+				chunks_info: [] as Knowledge.Chunks_info[]
+			};
 			formData.append("Uid", userInfo.userId);
 			formData.append("KBID", params.KBID);
 			formData.append("KID", params.KID);
 			formData.append("Limit", params.Limit);
 			formData.append("Offset", params.Offset);
 			const	results = await fetchGetKnowledge(formData);
-			if (results.error) return false;
+			if (results.error) return resObj;
 
 			if (results.data) {
-				resList = results.data as Knowledge.KDetails[]
+				resObj = results.data as Knowledge.KDetails
 			}
-			return resList;
+			return resObj;
 		},
 		/** 去除知识库相关缓存 */
 		clearKnowledgeStorage() {

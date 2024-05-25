@@ -23,7 +23,6 @@ interface ServiceEnvConfigWithProxyPattern extends ServiceEnvConfig {
    */
   proxyPattern: '/proxy-pattern';
 	proxyPattern2: '/api';
-	proxyPattern3: '/kbapi';
 }
 
 interface ImportMetaEnv {

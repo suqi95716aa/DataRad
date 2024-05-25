@@ -79,7 +79,8 @@
 						<div class="list-item_top">
 							<div class="info">
 								<div class="info-left">
-									<img src="@/assets/images/zsk.png" alt="" />
+									<!-- <img src="@/assets/images/zsk.png" alt="" /> -->
+									<file-type-icon :type="getFileType(item.KName)" :size="36" />
 								</div>
 								<div class="info-right">
 									<n-ellipsis class="i-title" style="max-width: 200px">
@@ -87,11 +88,12 @@
 									</n-ellipsis>
 								</div>
 							</div>
+
 							<div class="update-time">
 								<!-- <span>{{ 0 }} 字</span><n-divider vertical /> -->
 								<span>新建时间：{{ item.KCreateTime }}</span>
 							</div>
-							<div class="kb-id">
+							<!-- <div class="kb-id">
 								<span>文档id：{{ item.KID }}</span>
 								<n-popover trigger="hover">
 									<template #trigger>
@@ -105,7 +107,7 @@
 									</template>
 									<span>复制</span>
 								</n-popover>
-							</div>
+							</div> -->
 						</div>
 						<div class="list-item_bom">
 							<div class="btn-group">
@@ -336,6 +338,20 @@ export default defineComponent({
 			message.success("已复制");
 		};
 
+		const getFileType = (name: string) => {
+			let res: string = ''
+			let list = ['md', 'doc', 'txt', 'pdf', 'xlsx', 'csv', 'docx']
+			let arr = name.split('.') || []
+			let len = arr.length
+			let type = arr[len - 1] || ''
+
+			if (list.includes(type)) {
+				res = type
+			}
+
+			return res
+		}
+
 		return {
 			configRef,
 			previewsRef,
@@ -358,7 +374,8 @@ export default defineComponent({
 			downloadClick,
 			delClick,
 			copyClick,
-			createChange
+			createChange,
+			getFileType
 		};
 	},
 });
@@ -466,6 +483,7 @@ export default defineComponent({
 				padding: 12px 16px;
 				box-sizing: border-box;
 				overflow: hidden;
+				justify-content: space-around;
 				.info {
 					display: flex;
 					margin-bottom: 8px;
